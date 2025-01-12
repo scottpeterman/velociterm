@@ -1,0 +1,55 @@
+# config.prod.yaml
+app_name: "Velociterm"
+debug: false
+database_url: "sqlite:///velociterm_users.db"
+secret_key: "your-secure-production-key"
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  port: 8443
+  workers: 4
+  ssl_enabled: true
+  ssl_cert_path: "/etc/velociterm/certs/server.crt"
+  ssl_key_path: "/etc/velociterm/certs/server.key"
+  cors_origins:
+    - "https://localhost"
+
+# LDAP configuration
+ldap:
+  enabled: false
+  server: "ldaps://ldap.company.com"
+  base_dn: "dc=company,dc=com"
+  search_base: "ou=users,dc=company,dc=com"
+  search_filter: "(sAMAccountName={username})"
+
+  # Group requirements
+  required_groups:
+    - "cn=velociterm_users,ou=groups,dc=company,dc=com"
+    - "cn=it_staff,ou=groups,dc=company,dc=com"
+
+  # User whitelist
+  allowed_users:
+    - "speterman"
+    - "jsmith"
+    - "tech_lead"
+
+  # LDAP certificates
+  ca_cert_path: "/etc/velociterm/certs/ldap_ca.crt"
+  client_cert_path: "/etc/velociterm/certs/ldap_client.crt"
+  client_key_path: "/etc/velociterm/certs/ldap_client.key"
+
+  # Service account
+  bind_dn: "cn=velociterm_svc,ou=service_accounts,dc=company,dc=com"
+  bind_password: "service-account-password"
+
+# Session configuration
+sessions_dir: "velociterm/sessions"
+
+netbox:
+  enabled: true
+  host: "http://10.0.0.108:8000"
+  token: "netboxtokenhere"
+  verify_ssl: false
+  timeout: 30  # connection timeout in seconds
+  retries: 3
