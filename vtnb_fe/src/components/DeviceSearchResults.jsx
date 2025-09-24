@@ -3,7 +3,7 @@ import { Search, RefreshCw } from 'lucide-react';
 import DeviceSearchItem from './DeviceSearchItem';
 
 const DeviceSearchResults = ({
-  devices,
+  devices = [], // Default to empty array
   loading,
   hasSearched,
   viewMode,
@@ -49,6 +49,10 @@ const DeviceSearchResults = ({
 
     return (
       <div style={{
+        // Make this container scrollable with max height
+        maxHeight: '60vh',
+        overflowY: 'auto',
+        paddingRight: '0.5rem', // Space for scrollbar
         display: viewMode === 'compact' ? 'flex' : 'grid',
         flexDirection: viewMode === 'compact' ? 'column' : undefined,
         gridTemplateColumns: viewMode === 'cards' ? 'repeat(auto-fill, minmax(350px, 1fr))' : undefined,
@@ -73,13 +77,18 @@ const DeviceSearchResults = ({
       backgroundColor: 'var(--bg-accordion-content)',
       borderRadius: '0.5rem',
       padding: '1.5rem',
-      border: '1px solid var(--border-color)'
+      border: '1px solid var(--border-color)',
+      // Set max height for the entire results container
+      maxHeight: '70vh',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: '1.5rem'
+        marginBottom: '1.5rem',
+        flexShrink: 0 // Prevent header from shrinking
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-color)' }}>
           Search Results ({devices.length})
@@ -105,7 +114,11 @@ const DeviceSearchResults = ({
           </button>
         )}
       </div>
-      {renderContent()}
+
+      {/* Scrollable content area */}
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        {renderContent()}
+      </div>
     </div>
   );
 };
