@@ -2,7 +2,7 @@
 
 **Professional Terminal Session Management for Network Engineers**
 
-![VelociTerm NB Demo](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/slides.gif)
+![VelociTerm NB Demo](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/slides.gif)
 
 VelociTerm NB is a web-based platform that organizes and manages SSH connections to network devices, with advanced session filtering, NetBox integration, and multi-terminal capabilities. Built specifically for network professionals managing complex infrastructure.
 
@@ -116,7 +116,7 @@ Frontend will open automatically at `http://localhost:3000`
 
 **That's it!** VelociTerm NB is now running and ready to use.
 
-![Login Interface](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/login.png)
+![Login Interface](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/login.png)
 
 ### First Steps
 
@@ -125,13 +125,13 @@ Frontend will open automatically at `http://localhost:3000`
 3. **Add Sessions:** Create your first session or import from NetBox
 4. **Connect:** Click any session to open an SSH terminal
 
-![Virtual Desktop View](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/virtual_desktop.png)
+![Virtual Desktop View](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/virtual_desktop.png)
 
 ## Key Features in Detail
 
 ### Advanced Session Organization
 
-![Settings Interface](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/settings_cyber.png)
+![Settings Interface](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_cyber.png)
 
 **Smart Filtering:**
 - Search across device names, IP addresses, device types, platforms, and folders
@@ -147,7 +147,7 @@ Frontend will open automatically at `http://localhost:3000`
 
 ### Professional Terminal Experience
 
-![Multi-Terminal with Different Themes](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/multi_window_multi_theme.png)
+![Multi-Terminal with Different Themes](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/multi_window_multi_theme.png)
 
 **Multi-Terminal Support:**
 - Open multiple SSH sessions simultaneously in floating windows
@@ -155,7 +155,7 @@ Frontend will open automatically at `http://localhost:3000`
 - Proper window management with drag, resize, minimize, and focus handling
 - Real-time connection status tracking
 
-![Three Terminal Windows](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/3window.png)
+![Three Terminal Windows](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/3window.png)
 
 **Terminal Features:**
 - Full xterm.js integration with addon support (search, web links, fit)
@@ -165,11 +165,11 @@ Frontend will open automatically at `http://localhost:3000`
 
 ### Professional Theme System
 
-![Corporate Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/corp_theme.png)
+![Corporate Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/corp_theme.png)
 
-![Monospace Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/mono_theme.png)
+![Monospace Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/mono_theme.png)
 
-![Theme Selection](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/settings_theme_list.png)
+![Theme Selection](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_theme_list.png)
 
 **13+ Professional Themes:**
 - CRT variants (Cyber, Amber, Green, Mono)
@@ -180,11 +180,11 @@ Frontend will open automatically at `http://localhost:3000`
 
 ### NetBox Integration Excellence
 
-![NetBox Device Search](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/device_search_cyber.png)
+![NetBox Device Search](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/device_search_cyber.png)
 
-![NetBox Device Login](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/netbox_device_login.png)
+![NetBox Device Login](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/netbox_device_login.png)
 
-![Per-User Token Management](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/per_user_token_mgmt.png)
+![Per-User Token Management](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/per_user_token_mgmt.png)
 
 **Device Discovery:**
 - Real-time device search with site, platform, and status filtering
@@ -216,9 +216,9 @@ VelociTerm NB works with existing session files from other network tools:
 
 **Theme Consistency Across All Interfaces:**
 
-![Settings - Cyber Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/settings_cyber.png)
+![Settings - Cyber Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_cyber.png)
 
-![Settings - Light Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/dev/docs/images/settings_light.png)
+![Settings - Light Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_light.png)
 
 **Benefits:**
 - No migration required for existing workflows
