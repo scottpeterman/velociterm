@@ -2,7 +2,7 @@
 
 **Professional Terminal Session Management for Network Engineers**
 
-![VelociTerm NB Demo](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/slides2.gif)
+![VelociTerm NB Demo](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/slides3.gif)
 
 VelociTerm NB is a web-based platform that organizes and manages SSH connections to network devices, with advanced session filtering, NetBox integration, and multi-terminal capabilities. Built specifically for network professionals managing complex infrastructure.
 
