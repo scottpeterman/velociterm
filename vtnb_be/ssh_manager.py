@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fixed SSH Client Manager with proper paramiko integration
+SSH Client Manager optimized for text-based games like Angband
 """
 
 import paramiko
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class SSHClientManager:
-    """Fixed SSH client manager with proper connection handling"""
+    """SSH client manager optimized for real-time game performance"""
 
     def __init__(self):
         self.clients: Dict[str, Dict] = {}
@@ -28,8 +28,8 @@ class SSHClientManager:
         }
 
     async def connect(self, window_id: str, hostname: str, port: int, username: str, password: str, websocket):
-        """Connect to SSH host using proper paramiko flow"""
-        logger.info(f"=== SSH Connect Attempt ===")
+        """Connect to SSH host with game-optimized settings"""
+        logger.info(f"=== SSH Connect Attempt (Game Optimized) ===")
         logger.info(f"Window: {window_id}")
         logger.info(f"Target: {hostname}:{port}")
         logger.info(f"Username: {username}")
@@ -38,36 +38,52 @@ class SSHClientManager:
             await self.create_client(window_id)
 
         try:
-            # Create SSH client
+            # Create SSH client with game-optimized settings
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
             logger.info("Attempting SSH connection...")
 
-            # Connect using the standard paramiko method
+            # OPTIMIZED: Enhanced connection parameters for games
             ssh_client.connect(
                 hostname=hostname,
                 port=int(port),
                 username=username,
                 password=password,
-                timeout=10,
-                banner_timeout=10,
-                auth_timeout=10,
+                timeout=15,  # Slightly longer timeout
+                banner_timeout=15,
+                auth_timeout=15,
                 look_for_keys=False,
-                allow_agent=False
+                allow_agent=False,
+                compress=False,  # Disable compression for lower latency
+                gss_auth=False,
+                gss_kex=False
             )
 
-            logger.info("SSH connection established, creating shell...")
+            logger.info("SSH connection established, creating optimized shell...")
 
-            # Create interactive shell
+            # OPTIMIZED: Game-optimized shell configuration
             channel = ssh_client.invoke_shell(
-                term="xterm-256color",
+                term="xterm-256color",  # Full color support for games
                 width=80,
-                height=24
+                height=25,  # Standard roguelike dimensions
+                environment={
+                    'TERM': 'xterm-256color',
+                    'COLORTERM': 'truecolor',
+                    'LC_ALL': 'C.UTF-8',  # Consistent encoding
+                    'LANG': 'C.UTF-8'
+                }
             )
 
-            # Set channel to non-blocking
-            channel.settimeout(0.0)
+            # OPTIMIZED: Channel settings for real-time games
+            channel.settimeout(0.0)  # Non-blocking
+
+            # Enable keepalive to prevent connection drops during long games
+            transport = ssh_client.get_transport()
+            if transport:
+                transport.set_keepalive(30)  # Send keepalive every 30 seconds
+                # Disable Nagle's algorithm for lower latency
+                transport.sock.setsockopt(6, 1, 1)  # TCP_NODELAY
 
             # Store client data
             self.clients[window_id] = {
@@ -76,18 +92,18 @@ class SSHClientManager:
                 'connected': True
             }
 
-            logger.info(f"SSH shell created successfully for {window_id}")
+            logger.info(f"Game-optimized SSH shell created successfully for {window_id}")
 
             # Send success message
             await websocket.send_json({
                 'type': 'status',
-                'message': 'SSH connection established'
+                'message': 'SSH connection established (Game Mode)'
             })
 
-            # Send initial prompt/banner if available
-            await asyncio.sleep(0.5)  # Wait for initial output
+            # OPTIMIZED: Faster initial prompt handling
+            await asyncio.sleep(0.3)  # Reduced wait time
             if channel.recv_ready():
-                initial_data = channel.recv(4096)
+                initial_data = channel.recv(8192)  # Larger buffer
                 if initial_data:
                     logger.info(f"Sending initial SSH output: {len(initial_data)} bytes")
                     encoded_data = base64.b64encode(initial_data).decode('utf-8')
@@ -135,7 +151,7 @@ class SSHClientManager:
             logger.error(f"Failed to send error via websocket: {ws_error}")
 
     async def send_input(self, window_id: str, input_data: str):
-        """Send input to SSH channel"""
+        """Send input to SSH channel with game optimization"""
         if window_id not in self.clients or not self.clients[window_id]['connected']:
             logger.warning(f"No active SSH connection for window {window_id}")
             return
@@ -143,20 +159,29 @@ class SSHClientManager:
         channel = self.clients[window_id]['channel']
         if channel and not channel.closed:
             try:
-                # Send input directly as string (paramiko handles encoding)
+                # OPTIMIZED: Send input immediately without buffering
                 channel.send(input_data)
+
+                # Force flush the channel buffer for immediate transmission
+                if hasattr(channel, 'flush'):
+                    channel.flush()
+
                 logger.debug(f"Sent {len(input_data)} chars to SSH channel {window_id}: {repr(input_data)}")
             except Exception as e:
                 logger.error(f"Failed to send input to SSH channel {window_id}: {e}")
 
     async def resize_terminal(self, window_id: str, cols: int, rows: int):
-        """Resize the SSH terminal"""
+        """Resize the SSH terminal with game-friendly dimensions"""
         if window_id not in self.clients or not self.clients[window_id]['connected']:
             return
 
         channel = self.clients[window_id]['channel']
         if channel and not channel.closed:
             try:
+                # Ensure minimum dimensions for games
+                cols = max(cols, 80)
+                rows = max(rows, 24)
+
                 channel.resize_pty(width=cols, height=rows)
                 logger.debug(f"Resized SSH terminal {window_id} to {cols}x{rows}")
             except Exception as e:
@@ -186,8 +211,8 @@ class SSHClientManager:
                 logger.error(f"Error closing SSH client {window_id}: {e}")
 
     async def listen_to_ssh_output(self, window_id: str, websocket):
-        """Listen for SSH output and send to websocket - FIXED VERSION"""
-        logger.info(f"Starting SSH output listener for {window_id}")
+        """Listen for SSH output optimized for game performance"""
+        logger.info(f"Starting game-optimized SSH output listener for {window_id}")
 
         while window_id in self.clients:
             try:
@@ -195,7 +220,7 @@ class SSHClientManager:
 
                 if not client_data.get('connected'):
                     logger.debug(f"SSH not connected yet for {window_id}, waiting...")
-                    await asyncio.sleep(0.1)
+                    await asyncio.sleep(0.05)  # Reduced sleep for faster connection
                     continue
 
                 channel = client_data.get('channel')
@@ -203,10 +228,13 @@ class SSHClientManager:
                     logger.info(f"SSH channel closed for {window_id}")
                     break
 
-                # Check for available data
+                # OPTIMIZED: More aggressive data checking for games
+                data_received = False
+
                 if channel.recv_ready():
                     try:
-                        data = channel.recv(4096)
+                        # OPTIMIZED: Larger buffer for game data
+                        data = channel.recv(16384)  # Increased from 4096
                         if data:
                             logger.debug(f"Received {len(data)} bytes from SSH for {window_id}")
 
@@ -219,11 +247,30 @@ class SSHClientManager:
                                 'tabId': window_id
                             })
 
+                            data_received = True
                         else:
                             logger.debug(f"Empty data received from SSH for {window_id}")
 
                     except Exception as e:
                         logger.error(f"Error processing SSH output for {window_id}: {e}")
+
+                # Check for stderr data too (important for some games)
+                if channel.recv_stderr_ready():
+                    try:
+                        stderr_data = channel.recv_stderr(4096)
+                        if stderr_data:
+                            logger.debug(f"Received {len(stderr_data)} bytes stderr from SSH for {window_id}")
+
+                            encoded_data = base64.b64encode(stderr_data).decode('utf-8')
+                            await websocket.send_json({
+                                'type': 'ssh_output',
+                                'data': encoded_data,
+                                'tabId': window_id
+                            })
+
+                            data_received = True
+                    except Exception as e:
+                        logger.error(f"Error processing SSH stderr for {window_id}: {e}")
 
                 # Check if SSH session ended
                 if channel.exit_status_ready():
@@ -236,15 +283,20 @@ class SSHClientManager:
                     })
                     break
 
-                # Small delay to prevent CPU spinning
-                await asyncio.sleep(0.01)
+                # OPTIMIZED: Dynamic sleep based on data activity
+                if data_received:
+                    # If we received data, check again quickly for more
+                    await asyncio.sleep(0.001)  # 1ms for high responsiveness
+                else:
+                    # If no data, wait a bit longer but still responsive
+                    await asyncio.sleep(0.01)  # 10ms when idle
 
             except asyncio.CancelledError:
                 logger.info(f"SSH output listener cancelled for {window_id}")
                 break
             except Exception as e:
                 logger.error(f"Error in SSH output listener for {window_id}: {e}")
-                await asyncio.sleep(0.1)  # Brief pause before retrying
+                await asyncio.sleep(0.05)  # Brief pause before retrying
 
         logger.info(f"SSH output listener ended for {window_id}")
 

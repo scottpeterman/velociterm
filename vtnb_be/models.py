@@ -34,8 +34,7 @@ class DeviceFilter(BaseModel):
     site: Optional[str] = None
     platform: Optional[str] = None
     status: Optional[str] = "active"
-    limit: int = Field(default=50, le=200)
-
+    limit: int = Field(default=100, le=1000, ge=1)
 
 # User Settings Models
 class UserSettings(BaseModel):

@@ -142,7 +142,7 @@
     host: 172.16.101.100
     platform: ''
     port: '22'
-  - DeviceType: cisco_ios_xe
+  - DeviceType: cisco_ios
     Model: ''
     SerialNumber: ''
     SoftwareVersion: ''
@@ -182,3 +182,4 @@
     host: 172.16.98.32
     platform: ''
     port: '22'
+

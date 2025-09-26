@@ -6,6 +6,7 @@ Session-authenticated backend with comprehensive feature integration
 import asyncio
 import os
 import logging
+import secrets
 import time
 
 import psutil
@@ -14,7 +15,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import traceback
-from fastapi import WebSocket, WebSocketDisconnect
+
+import yaml
+from fastapi import WebSocket, WebSocketDisconnect, UploadFile, Form, File, Response
 from starlette.websockets import WebSocketState
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, Request, Cookie
@@ -25,6 +28,9 @@ from fastapi.responses import JSONResponse
 from models import *
 from workspace_manager import WorkspaceManager, NetBoxClient
 from connection_handlers import ConnectionHandlers
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -48,18 +54,100 @@ class VelociTermBackend:
         # Setup application
         self.setup_middleware()
         self.setup_routes()
+        self.setup_static_files()
+
+    def setup_static_files(self):
+        """Setup static file serving for React build"""
+        import os
+        from pathlib import Path
+
+        # Determine the static directory path
+        static_dir = Path("static")
+
+        # Check if static directory exists
+        if not static_dir.exists():
+            logger.warning(f"Static directory '{static_dir}' not found. Run 'npm run build' first.")
+            return
+
+        # Mount static assets from the build
+        # React build typically creates static/js/, static/css/, etc.
+        if (static_dir / "static").exists():
+            # Standard React build structure: static/static/js/, static/static/css/
+            self.app.mount("/static", StaticFiles(directory=str(static_dir / "static")), name="static")
+        else:
+            # Alternative structure where assets are directly in static/
+            self.app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+        # Serve other common assets
+        for asset_dir in ["assets", "images", "icons"]:
+            asset_path = static_dir / asset_dir
+            if asset_path.exists():
+                self.app.mount(f"/{asset_dir}", StaticFiles(directory=str(asset_path)), name=asset_dir)
+
+        # Serve manifest.json, favicon.ico, etc. from root of static
+        @self.app.get("/manifest.json")
+        async def get_manifest():
+            manifest_path = static_dir / "manifest.json"
+            if manifest_path.exists():
+                from fastapi.responses import FileResponse
+                return FileResponse(manifest_path, media_type="application/json")
+            raise HTTPException(status_code=404, detail="Manifest not found")
+
+        @self.app.get("/favicon.ico")
+        async def get_favicon():
+            favicon_path = static_dir / "favicon.ico"
+            if favicon_path.exists():
+                from fastapi.responses import FileResponse
+                return FileResponse(favicon_path, media_type="image/x-icon")
+            raise HTTPException(status_code=404, detail="Favicon not found")
+
+        # Handle service worker
+        @self.app.get("/sw.js")
+        async def get_service_worker():
+            sw_path = static_dir / "sw.js"
+            if sw_path.exists():
+                from fastapi.responses import FileResponse
+                return FileResponse(sw_path, media_type="application/javascript")
+            raise HTTPException(status_code=404, detail="Service worker not found")
+
+        # Serve React app for all non-API routes (client-side routing)
+        @self.app.get("/{catchall:path}")
+        async def serve_react_app(catchall: str):
+            # Skip API and WebSocket routes
+            if catchall.startswith(("api/", "ws/", "static/")):
+                raise HTTPException(status_code=404)
+
+            # Serve index.html for all other routes
+            index_path = static_dir / "index.html"
+            if index_path.exists():
+                from fastapi.responses import FileResponse
+                return FileResponse(index_path, media_type="text/html")
+            else:
+                raise HTTPException(status_code=404, detail="React app not built. Run 'npm run build'")
+
+    # Also add this helper method to debug static file structure:
+    def debug_static_structure(self):
+        """Debug helper to show static file structure"""
+        static_dir = Path("static")
+        if static_dir.exists():
+            logger.info("Static directory structure:")
+            for root, dirs, files in os.walk(static_dir):
+                level = root.replace(str(static_dir), '').count(os.sep)
+                indent = ' ' * 2 * level
+                logger.info(f"{indent}{os.path.basename(root)}/")
+                sub_indent = ' ' * 2 * (level + 1)
+                for file in files:
+                    logger.info(f"{sub_indent}{file}")
+        else:
+            logger.error("Static directory does not exist")
 
     def setup_middleware(self):
         """Setup CORS and other middleware"""
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=[
-                "http://localhost:3000",  # React dev server
-                "http://localhost:5173",  # Vite dev server
-                "http://localhost:5174",  # Alternative Vite port
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:5173",
-                "http://127.0.0.1:5174"
+                "*"
+
             ],
             allow_credentials=True,
             allow_methods=["*"],
@@ -285,7 +373,7 @@ class VelociTermBackend:
                 username: str = Depends(get_current_user_from_session)
         ):
             # Test the token first
-            client = NetBoxClient(config.api_url, config.api_token)
+            client = NetBoxClient(config.api_url, config.api_token, verify_ssl=False)
             test_result = await client.test_connection()
 
             if test_result["status"] == "error":
@@ -320,7 +408,7 @@ class VelociTermBackend:
             if not config:
                 raise HTTPException(status_code=404, detail="NetBox token not configured")
 
-            client = NetBoxClient(config["api_url"], config["api_token"])
+            client = NetBoxClient(config["api_url"], config["api_token"], verify_ssl=False)
             result = await client.test_connection()
 
             if result["status"] == "success":
@@ -331,13 +419,410 @@ class VelociTermBackend:
 
             return result
 
+        # Add this to your main.py imports at the top
+        import csv
+        import io
+        from typing import Union
+
+        # Replace the existing /api/sessions/import endpoint in main.py with this enhanced version:
+
+        @self.app.post("/api/sessions/import")
+        async def import_sessions(
+                file: UploadFile = File(...),
+                merge_mode: str = Form("merge"),  # "merge" or "replace"
+                import_mode: str = Form("yaml"),  # "yaml", "generic", or "netbox"
+                username: str = Depends(get_current_user_from_session)
+        ):
+            """Import sessions from YAML or CSV file with merge support"""
+            try:
+                # Validate file type based on import mode
+                if import_mode in ["generic", "netbox"]:
+                    if not file.filename.endswith(('.csv', '.CSV')):
+                        raise HTTPException(status_code=400,
+                                            detail="CSV files (.csv) are required for this import mode")
+                elif import_mode == "yaml":
+                    if not file.filename.endswith(('.yaml', '.yml')):
+                        raise HTTPException(status_code=400,
+                                            detail="Only YAML files (.yaml, .yml) are supported for YAML import")
+
+                # Read file content
+                content = await file.read()
+
+                # Parse based on import mode
+                if import_mode == "yaml":
+                    import_data = await parse_yaml_import(content, username)
+                elif import_mode == "generic":
+                    import_data = await parse_generic_csv_import(content, username)
+                elif import_mode == "netbox":
+                    import_data = await parse_netbox_csv_import(content, username)
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid import mode")
+
+                if not isinstance(import_data, list):
+                    raise HTTPException(status_code=400, detail="Invalid file format")
+
+                # Load existing sessions
+                existing_folders = self.workspace_manager.load_sessions_for_user(username)
+
+                if merge_mode == "replace":
+                    # Replace mode: completely replace existing sessions
+                    final_folders = []
+                else:
+                    # Merge mode: start with existing sessions
+                    final_folders = existing_folders.copy()
+
+                # Process imported folders
+                import_stats = {
+                    "folders_processed": 0,
+                    "sessions_imported": 0,
+                    "sessions_merged": 0,
+                    "sessions_skipped": 0
+                }
+
+                for folder_data in import_data:
+                    if not isinstance(folder_data, dict) or 'folder_name' not in folder_data:
+                        continue
+
+                    folder_name = folder_data['folder_name']
+                    imported_sessions = folder_data.get('sessions', [])
+
+                    import_stats["folders_processed"] += 1
+
+                    # Find existing folder or create new one
+                    target_folder = None
+                    for folder in final_folders:
+                        if folder.folder_name == folder_name:
+                            target_folder = folder
+                            break
+
+                    if not target_folder:
+                        # Create new folder
+                        target_folder = SessionFolder(folder_name=folder_name, sessions=[])
+                        final_folders.append(target_folder)
+
+                    # Process sessions in this folder
+                    existing_session_keys = set()
+                    for session in target_folder.sessions:
+                        key = f"{session.display_name}:{session.host}:{session.port}"
+                        existing_session_keys.add(key)
+
+                    for session_data in imported_sessions:
+                        try:
+                            # Normalize the session data
+                            normalized_session = self.workspace_manager._normalize_session_data(
+                                session_data, folder_name
+                            )
+
+                            # Create session key for duplicate detection
+                            session_key = f"{normalized_session['display_name']}:{normalized_session['host']}:{normalized_session['port']}"
+
+                            if session_key in existing_session_keys:
+                                import_stats["sessions_skipped"] += 1
+                                continue
+
+                            # Create SessionData object
+                            session = SessionData(**normalized_session)
+                            target_folder.sessions.append(session)
+                            existing_session_keys.add(session_key)
+
+                            if merge_mode == "merge":
+                                import_stats["sessions_merged"] += 1
+                            else:
+                                import_stats["sessions_imported"] += 1
+
+                        except Exception as session_error:
+                            logger.warning(f"Failed to import session: {session_error}")
+                            import_stats["sessions_skipped"] += 1
+                            continue
+
+                # Save the final session structure
+                success = self.workspace_manager.save_sessions_for_user(username, final_folders)
+
+                if not success:
+                    raise HTTPException(status_code=500, detail="Failed to save imported sessions")
+
+                return {
+                    "status": "success",
+                    "message": f"Successfully imported sessions in {merge_mode} mode",
+                    "stats": import_stats
+                }
+
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Session import failed for {username}: {e}")
+                raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+        # Add these helper functions to main.py:
+
+        async def parse_yaml_import(content: bytes, username: str) -> list:
+            """Parse YAML import content"""
+            try:
+                import_data = yaml.safe_load(content.decode('utf-8'))
+            except yaml.YAMLError as e:
+                raise HTTPException(status_code=400, detail=f"Invalid YAML format: {str(e)}")
+            except UnicodeDecodeError:
+                raise HTTPException(status_code=400, detail="File must be UTF-8 encoded")
+            return import_data
+
+        async def parse_generic_csv_import(content: bytes, username: str) -> list:
+            """Parse generic CSV import content"""
+            try:
+                csv_content = content.decode('utf-8')
+                csv_reader = csv.DictReader(io.StringIO(csv_content))
+
+                # Required columns for generic CSV
+                required_columns = ['display_name', 'host', 'folder_name']
+
+                # Check if required columns exist
+                if not csv_reader.fieldnames:
+                    raise HTTPException(status_code=400, detail="CSV file appears to be empty or invalid")
+
+                missing_columns = [col for col in required_columns if col not in csv_reader.fieldnames]
+                if missing_columns:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Missing required columns: {', '.join(missing_columns)}. Required: {', '.join(required_columns)}"
+                    )
+
+                # Group sessions by folder
+                folders_dict = {}
+
+                for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 because of header
+                    try:
+                        # Skip empty rows
+                        if not any(row.values()):
+                            continue
+
+                        # Validate required fields
+                        for field in required_columns:
+                            if not row.get(field, '').strip():
+                                logger.warning(f"Row {row_num}: Missing required field '{field}', skipping")
+                                continue
+
+                        folder_name = row['folder_name'].strip()
+
+                        # Create session data
+                        session_data = {
+                            'display_name': row['display_name'].strip(),
+                            'host': row['host'].strip(),
+                            'port': int(row.get('port', 22)) if row.get('port', '').strip() else 22,
+                            'device_type': row.get('device_type', 'linux').strip() or 'linux',
+                            'platform': row.get('platform', '').strip(),
+                        }
+
+                        # Add to folder
+                        if folder_name not in folders_dict:
+                            folders_dict[folder_name] = {
+                                'folder_name': folder_name,
+                                'sessions': []
+                            }
+
+                        folders_dict[folder_name]['sessions'].append(session_data)
+
+                    except ValueError as e:
+                        logger.warning(f"Row {row_num}: Invalid data - {str(e)}")
+                        continue
+                    except Exception as e:
+                        logger.warning(f"Row {row_num}: Error processing row - {str(e)}")
+                        continue
+
+                return list(folders_dict.values())
+
+            except UnicodeDecodeError:
+                raise HTTPException(status_code=400, detail="CSV file must be UTF-8 encoded")
+            except Exception as e:
+                logger.error(f"CSV parsing error: {e}")
+                raise HTTPException(status_code=400, detail=f"Failed to parse CSV: {str(e)}")
+
+        async def parse_netbox_csv_import(content: bytes, username: str) -> list:
+            """Parse NetBox CSV export content"""
+            try:
+                csv_content = content.decode('utf-8')
+                csv_reader = csv.DictReader(io.StringIO(csv_content))
+
+                if not csv_reader.fieldnames:
+                    raise HTTPException(status_code=400, detail="CSV file appears to be empty or invalid")
+
+                # NetBox CSV might have different column names, try common variations
+                column_mappings = {
+                    # NetBox export columns -> our columns
+                    'name': 'display_name',
+                    'Name': 'display_name',
+                    'primary_ip': 'host',
+                    'Primary IP': 'host',
+                    'primary_ip4': 'host',
+                    'Primary IPv4': 'host',
+                    'site': 'site',
+                    'Site': 'site',
+                    'platform': 'platform',
+                    'Platform': 'platform',
+                    'device_type': 'device_type',
+                    'Device Type': 'device_type',
+                    'model': 'device_type',
+                    'Model': 'device_type',
+                    'status': 'status',
+                    'Status': 'status'
+                }
+
+                # Find which columns we have
+                available_columns = {}
+                for csv_col in csv_reader.fieldnames:
+                    if csv_col in column_mappings:
+                        available_columns[column_mappings[csv_col]] = csv_col
+
+                # Check for required columns (we need at least name and host/ip)
+                if 'display_name' not in available_columns:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="NetBox CSV must contain a 'name' or 'Name' column"
+                    )
+
+                # Group sessions by site (or create default folder)
+                folders_dict = {}
+
+                for row_num, row in enumerate(csv_reader, start=2):
+                    try:
+                        # Skip empty rows
+                        if not any(row.values()):
+                            continue
+
+                        display_name = row.get(available_columns['display_name'], '').strip()
+                        if not display_name:
+                            continue
+
+                        # Try to get host/IP
+                        host = ''
+                        if 'host' in available_columns:
+                            host = row.get(available_columns['host'], '').strip()
+                            # Clean IP address (remove /24 notation if present)
+                            if '/' in host:
+                                host = host.split('/')[0]
+
+                        # If no host found, use display_name as host
+                        if not host:
+                            host = display_name
+
+                        # Determine folder (use site if available, otherwise 'NetBox Import')
+                        folder_name = 'NetBox Import'
+                        if 'site' in available_columns:
+                            site_name = row.get(available_columns['site'], '').strip()
+                            if site_name:
+                                folder_name = site_name
+
+                        # Determine device type
+                        device_type = 'linux'  # default
+                        if 'device_type' in available_columns:
+                            dt = row.get(available_columns['device_type'], '').strip().lower()
+                            if 'cisco' in dt:
+                                device_type = 'cisco_ios'
+                            elif 'juniper' in dt:
+                                device_type = 'juniper_junos'
+                            elif 'arista' in dt:
+                                device_type = 'arista_eos'
+                            elif dt:
+                                device_type = dt
+
+                        # Get platform
+                        platform = ''
+                        if 'platform' in available_columns:
+                            platform = row.get(available_columns['platform'], '').strip()
+
+                        # Create session data
+                        session_data = {
+                            'display_name': display_name,
+                            'host': host,
+                            'port': 22,
+                            'device_type': device_type,
+                            'platform': platform
+                        }
+
+                        # Add to folder
+                        if folder_name not in folders_dict:
+                            folders_dict[folder_name] = {
+                                'folder_name': folder_name,
+                                'sessions': []
+                            }
+
+                        folders_dict[folder_name]['sessions'].append(session_data)
+
+                    except Exception as e:
+                        logger.warning(f"Row {row_num}: Error processing NetBox row - {str(e)}")
+                        continue
+
+                return list(folders_dict.values())
+
+            except UnicodeDecodeError:
+                raise HTTPException(status_code=400, detail="CSV file must be UTF-8 encoded")
+            except Exception as e:
+                logger.error(f"NetBox CSV parsing error: {e}")
+                raise HTTPException(status_code=400, detail=f"Failed to parse NetBox CSV: {str(e)}")
+
+        # Add this simple export endpoint to your main.py in the setup_routes() method
+
+        @self.app.get("/api/sessions/export")
+        async def export_sessions(username: str = Depends(get_current_user_from_session)):
+            """Export sessions as YAML file"""
+            try:
+                # Load user sessions
+                folders = self.workspace_manager.load_sessions_for_user(username)
+
+                if not folders:
+                    raise HTTPException(status_code=404, detail="No sessions found to export")
+
+                # Convert to YAML format (same format as the sessions.yaml file)
+                yaml_lines = []
+
+                for folder in folders:
+                    # Folder header
+                    yaml_lines.append(f"- folder_name: \"{folder.folder_name}\"")
+                    yaml_lines.append("  sessions:")
+
+                    # Sessions in the format that matches your current sessions.yaml
+                    for session in folder.sessions:
+                        yaml_lines.append(f"    - display_name: \"{session.display_name}\"")
+                        yaml_lines.append(f"      host: \"{session.host}\"")
+                        yaml_lines.append(f"      port: \"{session.port}\"")
+                        yaml_lines.append(f"      DeviceType: \"{session.device_type}\"")
+
+                        # Add platform if it exists
+                        if hasattr(session, 'platform') and session.platform:
+                            yaml_lines.append(f"      platform: \"{session.platform}\"")
+
+                        # Keep the legacy credsid field for compatibility
+                        yaml_lines.append("      credsid: \"\"")
+
+                    yaml_lines.append("")  # Empty line between folders
+
+                yaml_content = "\n".join(yaml_lines)
+
+                # Generate filename with timestamp
+                timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+                filename = f"velocitiem_sessions_{timestamp}.yaml"
+
+                # Return as file download
+                from fastapi.responses import Response
+                return Response(
+                    content=yaml_content,
+                    media_type="application/x-yaml",
+                    headers={
+                        "Content-Disposition": f"attachment; filename={filename}"
+                    }
+                )
+
+            except Exception as e:
+                logger.error(f"Export failed for {username}: {e}")
+                raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
+
         @self.app.get("/api/netbox/devices")
         async def search_devices(
                 search: Optional[str] = None,
                 site: Optional[str] = None,
                 platform: Optional[str] = None,
                 status: str = "active",
-                limit: int = 50,
+                limit: int = 100,
                 username: str = Depends(get_current_user_from_session)
         ):
             """Search NetBox devices"""
@@ -346,7 +831,7 @@ class VelociTermBackend:
             if not config:
                 raise HTTPException(status_code=404, detail="NetBox token not configured")
 
-            client = NetBoxClient(config["api_url"], config["api_token"])
+            client = NetBoxClient(config["api_url"], config["api_token"],verify_ssl=False)
             filters = DeviceFilter(
                 search=search,
                 site=site,
@@ -370,7 +855,7 @@ class VelociTermBackend:
             if not config:
                 raise HTTPException(status_code=404, detail="NetBox token not configured")
 
-            client = NetBoxClient(config["api_url"], config["api_token"])
+            client = NetBoxClient(config["api_url"], config["api_token"], verify_ssl=False)
             sites = await client.get_sites()
 
             return {"sites": sites}
@@ -987,6 +1472,29 @@ class VelociTermBackend:
                 timestamp=datetime.utcnow().isoformat()
             )
 
+        @self.app.get("/api/netbox/connection/test")
+        async def test_netbox_connection(username: str = Depends(get_current_user_from_session)):
+            """Quick connection test without updating timestamps"""
+            config = self.workspace_manager.load_netbox_config(username)
+
+            if not config:
+                return {"status": "not_configured"}
+
+            try:
+                client = NetBoxClient(config["api_url"], config["api_token"], verify_ssl=False)
+                result = await client.test_connection()
+
+                return {
+                    "status": "connected" if result["status"] == "success" else "error",
+                    "message": result.get("message", ""),
+                    "api_url": config["api_url"]
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "message": str(e),
+                    "api_url": config["api_url"]
+                }
         # Development info
         @self.app.get("/")
         async def dev_info():
@@ -1034,6 +1542,7 @@ app = create_app()
 def run_server():
     """Run the backend server"""
     print("Starting VelociTerm Backend v0.3.0...")
+    print("Running Demo: http://localhost:8050/index.html")
     print("Enhanced session-based authentication with comprehensive tooling")
     print("Backend API: http://localhost:8050")
     print("API Documentation: http://localhost:8050/docs")

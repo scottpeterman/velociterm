@@ -22,7 +22,8 @@ import base64
 
 # Changed to absolute import
 from models import *
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logger = logging.getLogger(__name__)
 
 
@@ -706,12 +707,15 @@ class WorkspaceManager:
             return False
 
 
-class NetBoxClient:
-    """NetBox API client with enhanced error handling"""
+# In workspace_manager.py - Update the NetBoxClient class
 
-    def __init__(self, api_url: str, api_token: str):
+class NetBoxClient:
+    """NetBox API client with enhanced error handling and SSL verification disabled for POC"""
+
+    def __init__(self, api_url: str, api_token: str, verify_ssl: bool = False):
         self.api_url = api_url.rstrip('/')
         self.api_token = api_token
+        self.verify_ssl = verify_ssl  # Default to False for POC
         self.headers = {
             'Authorization': f'Token {api_token}',
             'Content-Type': 'application/json',
@@ -719,9 +723,9 @@ class NetBoxClient:
         }
 
     async def test_connection(self) -> Dict[str, Any]:
-        """Test NetBox API connection"""
+        """Test NetBox API connection with SSL verification disabled"""
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(verify=self.verify_ssl) as client:
                 response = await client.get(
                     f"{self.api_url}/api/",
                     headers=self.headers,
@@ -732,7 +736,8 @@ class NetBoxClient:
                     return {
                         "status": "success",
                         "message": "NetBox API connection successful",
-                        "api_root": "accessible"
+                        "api_root": "accessible",
+                        "ssl_verification": self.verify_ssl
                     }
                 else:
                     return {
@@ -744,7 +749,7 @@ class NetBoxClient:
             return {"status": "error", "message": str(e)}
 
     async def search_devices(self, filters: DeviceFilter) -> NetBoxSearchResponse:
-        """Search NetBox devices with filters"""
+        """Search NetBox devices with filters - SSL verification disabled"""
         try:
             params = {
                 "limit": filters.limit,
@@ -758,7 +763,7 @@ class NetBoxClient:
             if filters.platform:
                 params["platform"] = filters.platform
 
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(verify=self.verify_ssl) as client:
                 response = await client.get(
                     f"{self.api_url}/api/dcim/devices/",
                     headers=self.headers,
@@ -873,30 +878,55 @@ class NetBoxClient:
             )
 
     async def get_sites(self) -> List[Dict[str, Any]]:
-        """Get available sites"""
+        """Get available sites - with pagination support and SSL verification disabled"""
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{self.api_url}/api/dcim/sites/",
-                    headers=self.headers,
-                    timeout=30.0
-                )
+            all_sites = []
+            next_url = f"{self.api_url}/api/dcim/sites/"
 
-                if response.status_code == 200:
-                    data = response.json()
-                    return [{"id": site["id"], "name": site["name"]}
-                            for site in data.get("results", [])]
-                else:
-                    return []
+            while next_url:
+                # Add limit parameter for first request only
+                params = {"limit": 1000} if next_url == f"{self.api_url}/api/dcim/sites/" else {}
+
+                async with httpx.AsyncClient(verify=self.verify_ssl) as client:
+                    response = await client.get(
+                        next_url,
+                        headers=self.headers,
+                        params=params,
+                        timeout=30.0
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+
+                        # Add sites from this page
+                        sites_page = [{"id": site["id"], "name": site["name"]}
+                                      for site in data.get("results", [])]
+                        all_sites.extend(sites_page)
+
+                        # Check if there's a next page
+                        next_url = data.get("next")
+
+                        logger.info(f"Loaded {len(sites_page)} sites from current page, total: {len(all_sites)}")
+
+                        # Safety check - don't load more than 5000 sites
+                        if len(all_sites) > 5000:
+                            logger.warning(f"Hit site limit safety check at {len(all_sites)} sites")
+                            break
+                    else:
+                        logger.error(f"Failed to get sites: HTTP {response.status_code}")
+                        break
+
+            logger.info(f"Total sites loaded: {len(all_sites)}")
+            return all_sites
 
         except Exception as e:
             logger.error(f"Failed to get sites: {e}")
             return []
 
     async def get_device_by_id(self, device_id: int) -> Optional[NetBoxDeviceResponse]:
-        """Get specific device by ID"""
+        """Get specific device by ID - SSL verification disabled"""
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(verify=self.verify_ssl) as client:
                 response = await client.get(
                     f"{self.api_url}/api/dcim/devices/{device_id}/",
                     headers=self.headers,
@@ -940,3 +970,6 @@ class NetBoxClient:
         except Exception as e:
             logger.error(f"Failed to get device {device_id}: {e}")
             return None
+
+
+# Also add this configuration option to suppress urllib3 warnings a

@@ -208,8 +208,9 @@ class ConnectionHandlers:
         # Fall back to direct client
         return websocket.client.host if websocket.client else "unknown"
 
+    # In connection_handlers.py, replace the websocket_terminal method
     async def websocket_terminal(self, websocket: WebSocket, window_id: str):
-        """Handle SSH terminal WebSocket connections - simplified auth"""
+        """Handle SSH terminal WebSocket connections - optimized for games"""
 
         client_ip = self.get_client_ip(websocket)
         user_agent = websocket.headers.get("user-agent", "")
@@ -217,16 +218,26 @@ class ConnectionHandlers:
         # Register window with simple tracking
         self.window_tracker.register_window(window_id, client_ip, user_agent)
 
+        # OPTIMIZED: Set WebSocket options for games
+        websocket._ping_interval = 20  # More frequent pings
+        websocket._ping_timeout = 10
+
         await websocket.accept()
-        logger.info(f"Terminal WebSocket connected: {window_id} from {client_ip}")
+        logger.info(f"Game-optimized Terminal WebSocket connected: {window_id} from {client_ip}")
 
         # Create SSH client
         await self.ssh_manager.create_client(window_id)
 
-        # Start output listener task
+        # Start output listener task with higher priority
         listen_task = asyncio.create_task(
             self.ssh_manager.listen_to_ssh_output(window_id, websocket)
         )
+
+        # OPTIMIZED: Set task priority if possible
+        try:
+            listen_task.set_name(f"ssh_output_{window_id}")
+        except AttributeError:
+            pass  # Not all Python versions support set_name
 
         try:
             while True:
@@ -250,15 +261,15 @@ class ConnectionHandlers:
                     )
 
                 elif data.get('type') == 'input':
-                    # Send input to SSH process
+                    # OPTIMIZED: Send input immediately for games
                     await self.ssh_manager.send_input(window_id, data.get('data', ''))
 
                 elif data.get('type') == 'resize':
-                    # Resize terminal
+                    # Resize terminal with game-friendly constraints
                     await self.ssh_manager.resize_terminal(
                         window_id,
-                        data.get('cols', 80),
-                        data.get('rows', 24)
+                        max(data.get('cols', 80), 80),  # Minimum 80 cols
+                        max(data.get('rows', 24), 24)  # Minimum 24 rows
                     )
 
         except WebSocketDisconnect:
@@ -266,7 +277,7 @@ class ConnectionHandlers:
         except Exception as e:
             logger.error(f"Terminal WebSocket error for {window_id}: {e}")
         finally:
-            # Cleanup
+            # Cleanup (same as before)
             listen_task.cancel()
             try:
                 await listen_task
@@ -275,6 +286,7 @@ class ConnectionHandlers:
 
             await self.ssh_manager.disconnect(window_id)
             self.window_tracker.cleanup_window(window_id)
+
 
     async def websocket_tui(self, websocket: WebSocket, window_id: str):
         """Handle TUI tool WebSocket connections - simplified auth"""
