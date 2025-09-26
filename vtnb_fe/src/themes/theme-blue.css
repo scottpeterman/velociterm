@@ -1,0 +1,160 @@
+/* Blue theme - scoped to .theme-blue class */
+.theme-blue {
+    /* CSS Custom Properties scoped to theme */
+    --bg-main: #f8faff !important; /* Very light blue background */
+    --bg-sidebar: #ffffff !important; /* White sidebar */
+    --bg-accordion: #e6f2ff; /* Light blue for accordion sections */
+    --bg-accordion-header: #d6ebff; /* Slightly darker blue for headers */
+    --bg-accordion-content: #ffffff; /* White for content areas */
+    --bg-button: #1da1f2; /* Twitter blue for buttons */
+    --bg-scroll: #d6ebff; /* Light blue for scrollbars */
+    --bg-thumb-active: #1da1f2; /* Twitter blue for scrollbar thumb */
+    --bg-thumb-hover: #0d8bd9; /* Darker blue for hover */
+    --bg-button-hover: #0d8bd9; /* Darker blue for button hover */
+    --bg-input: #f0f7ff; /* Very light blue for input fields */
+    --bg-tab: #e6f2ff; /* Light blue for tabs */
+    --bg-tab-active: #1da1f2; /* Twitter blue for active tabs */
+    --text-color: #1c1c1c; /* Dark text for readability */
+    --text-accordion: #4a5568; /* Dark grey for accordion text */
+    --text-button: #ffffff; /* White text for buttons */
+    --text-tab: #ffffff; /* White text for active tabs */
+    --text-tab-inactive: #718096; /* Grey for inactive tabs */
+    --border-color: #cbd5e0; /* Light blue-grey for borders */
+    --border-focus: #1da1f2; /* Twitter blue for focus states */
+}
+
+/* All selectors scoped under .theme-blue */
+.theme-blue body,
+.theme-blue {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+}
+
+.theme-blue .custom-bg-color {
+    background-color: var(--bg-sidebar);
+}
+
+.theme-blue #tab-contents {
+    position: relative;
+    background-color: var(--bg-main);
+}
+
+.theme-blue .sidebar {
+    background-color: var(--bg-sidebar);
+}
+
+.theme-blue .accordion-header {
+    background-color: var(--bg-accordion-header);
+}
+
+.theme-blue .accordion-content {
+    background-color: var(--bg-accordion-content);
+    color: var(--text-accordion);
+}
+
+.theme-blue .button {
+    background-color: var(--bg-button);
+    color: var(--text-button);
+}
+
+.theme-blue .button:hover {
+    background-color: var(--bg-button-hover);
+}
+
+.theme-blue .form-input {
+    background-color: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.theme-blue .form-input:focus {
+    outline: 2px solid var(--border-focus);
+    box-shadow: none;
+}
+
+.theme-blue .tab-button {
+    background-color: var(--bg-tab);
+    color: var(--text-tab-inactive);
+    padding: 0.5em 1em;
+    margin-right: 0.5em;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.theme-blue .tab-button:hover {
+    background-color: var(--bg-button-hover);
+}
+
+.theme-blue .tab-button.active-button {
+    background-color: var(--bg-tab-active);
+    color: var(--text-tab);
+    border-bottom: 1px solid var(--bg-main);
+}
+
+.theme-blue #tab-contents {
+    border: 1px solid var(--border-color);
+}
+
+.theme-blue .active-tab {
+    border-top: none;
+}
+
+.theme-blue #tab-buttons {
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.theme-blue .tab-content {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+    padding: 1em;
+    border-radius: 0 0 5px 5px;
+    display: none;
+}
+
+.theme-blue .active-tab .tab-content {
+    display: block;
+}
+
+.theme-blue .terminal {
+    background-color: var(--bg-accordion-content);
+    color: var(--text-color);
+}
+
+.theme-blue .search-input {
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-color);
+}
+
+.theme-blue .bg-light,
+.theme-blue .bg-white {
+    background-color: var(--bg-main) !important;
+}
+
+/* Scrollbar styles scoped to theme */
+.theme-blue ::-webkit-scrollbar {
+    width: 12px !important;
+}
+
+.theme-blue ::-webkit-scrollbar-track {
+    background: var(--bg-scroll) !important;
+}
+
+.theme-blue ::-webkit-scrollbar-thumb {
+    background: var(--bg-thumb-active) !important;
+    border-radius: 6px !important;
+}
+
+.theme-blue ::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-thumb-hover) !important;
+}
+
+/* Firefox scrollbar styles */
+.theme-blue * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-thumb-active) var(--bg-scroll);
+}

@@ -1,0 +1,284 @@
+/* CRT Green Phosphor theme - scoped to .theme-green class */
+.theme-green {
+    /* CSS Custom Properties scoped to theme */
+    --bg-main: #000000 !important; /* Pure black CRT background */
+    --bg-sidebar: #000000 !important; /* Black sidebar like old terminals */
+    --bg-accordion: #001100; /* Very subtle dark green */
+    --bg-accordion-header: #002200; /* Slightly more green for headers */
+    --bg-accordion-content: #000000; /* Pure black for content areas */
+    --bg-button: #003300; /* Subtle dark green for buttons */
+    --bg-scroll: #002200; /* Dark green for scrollbars */
+    --bg-thumb-active: #11dd11; /* Medium green for scrollbar thumb */
+    --bg-thumb-hover: #00ff00; /* Bright phosphor green for hover */
+    --bg-button-hover: #004400; /* Slightly brighter green for button hover */
+    --bg-input: #000800; /* Very dark with hint of green for input */
+    --bg-tab: #001100; /* Subtle dark green for tabs */
+    --bg-tab-active: #00ff00; /* Bright phosphor green for active tab */
+    --text-color: #00ff00; /* Classic phosphor green text */
+    --text-accordion: #00ff00; /* Matching phosphor green text */
+    --text-button: #000000; /* Black text on green buttons for contrast */
+    --text-tab: #000000; /* Black text for active tab contrast */
+    --text-tab-inactive: #11dd11; /* Dimmer green for inactive tabs */
+    --border-color: #11dd11; /* Medium phosphor green for borders */
+    --border-focus: #00ff00; /* Bright phosphor green for focus states */
+
+    /* Terminal-style fonts */
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    --font-ui: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
+}
+
+/* Apply terminal fonts globally to the theme */
+.theme-green,
+.theme-green body,
+.theme-green * {
+    font-family: var(--font-mono) !important;
+}
+
+/* CRT Phosphor glow effects */
+.theme-green,
+.theme-green body {
+    text-shadow: 0 0 1px #00ff00, 0 0 2px #00ff0030;
+}
+
+/* Specific font styling for different elements */
+.theme-green h1,
+.theme-green h2,
+.theme-green h3,
+.theme-green h4,
+.theme-green h5,
+.theme-green h6 {
+    font-family: var(--font-ui) !important;
+    font-weight: 600;
+    text-shadow: 0 0 1px #00ff00, 0 0 2px #00ff0030;
+}
+
+.theme-green .button,
+.theme-green .tab-button,
+.theme-green .form-input,
+.theme-green input,
+.theme-green textarea,
+.theme-green select {
+    font-family: var(--font-mono) !important;
+    font-weight: 400;
+}
+
+.theme-green code,
+.theme-green pre,
+.theme-green .terminal,
+.theme-green .console {
+    font-family: var(--font-mono) !important;
+    font-weight: 400;
+    text-shadow: 0 0 1px #00ff00, 0 0 2px #00ff00;
+}
+
+/* All selectors scoped under .theme-green */
+.theme-green body,
+.theme-green {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+}
+
+.theme-green .custom-bg-color {
+    background-color: var(--bg-sidebar);
+}
+
+.theme-green #tab-contents {
+    position: relative;
+    background-color: var(--bg-main);
+}
+
+.theme-green .sidebar {
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    box-shadow: inset -1px 0 2px #00ff0030;
+}
+
+.theme-green .accordion-header {
+    background-color: var(--bg-accordion-header);
+}
+
+.theme-green .accordion-content {
+    background-color: var(--bg-accordion-content);
+    color: var(--text-accordion);
+}
+
+.theme-green .button {
+    background-color: var(--bg-button);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 3px #00ff0030, inset 0 0 3px #00ff0020;
+}
+
+.theme-green .button:hover {
+    background-color: var(--bg-button-hover);
+    box-shadow: 0 0 6px #00ff0050, inset 0 0 6px #00ff0030;
+}
+
+.theme-green .form-input {
+    background-color: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    box-shadow: inset 0 0 3px #00ff0020;
+}
+
+.theme-green .form-input:focus {
+    outline: 2px solid var(--border-focus);
+    box-shadow: 0 0 6px #00ff0050, inset 0 0 6px #00ff0030;
+}
+
+.theme-green .form-input::placeholder {
+    color: var(--text-tab-inactive);
+    opacity: 0.7;
+}
+
+.theme-green .tab-button {
+    background-color: var(--bg-tab);
+    color: var(--text-tab-inactive);
+    padding: 0.5em 1em;
+    margin-right: 0.5em;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 2px #00ff0020;
+}
+
+.theme-green .tab-button:hover {
+    background-color: var(--bg-button-hover);
+    box-shadow: 0 0 4px #00ff0040;
+    text-shadow: 0 0 2px #00ff00;
+}
+
+.theme-green .tab-button.active-button {
+    background-color: var(--bg-tab-active);
+    color: var(--text-tab);
+    border-bottom: 1px solid var(--bg-main);
+    box-shadow: 0 0 8px #00ff0060, inset 0 0 8px #00ff0040;
+    text-shadow: 0 0 3px #000000;
+}
+
+.theme-green #tab-contents {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 4px #00ff0030;
+}
+
+.theme-green .active-tab {
+    border-top: none;
+}
+
+.theme-green #tab-buttons {
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.theme-green .tab-content {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+    padding: 1em;
+    border-radius: 0 0 5px 5px;
+    display: none;
+}
+
+.theme-green .active-tab .tab-content {
+    display: block;
+}
+
+.theme-green .terminal {
+    background-color: var(--bg-accordion-content);
+    color: var(--text-color);
+    text-shadow: 0 0 1px #00ff00, 0 0 2px #00ff00;
+}
+
+.theme-green .search-input {
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-color);
+    box-shadow: 0 0 3px #00ff0030;
+}
+
+.theme-green .search-input:focus {
+    box-shadow: 0 0 6px #00ff0050;
+}
+
+.theme-green .bg-light,
+.theme-green .bg-white {
+    background-color: var(--bg-main) !important;
+}
+
+/* Enhanced CRT scanline effect */
+.theme-green::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 2px,
+            rgba(0, 255, 0, 0.03) 2px,
+            rgba(0, 255, 0, 0.03) 4px
+        );
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Scrollbar styles scoped to theme */
+.theme-green ::-webkit-scrollbar {
+    width: 12px !important;
+}
+
+.theme-green ::-webkit-scrollbar-track {
+    background: var(--bg-scroll) !important;
+    box-shadow: inset 0 0 3px #00ff0020;
+}
+
+.theme-green ::-webkit-scrollbar-thumb {
+    background: var(--bg-thumb-active) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 0 3px #00ff0040;
+}
+
+.theme-green ::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-thumb-hover) !important;
+    box-shadow: 0 0 6px #00ff0060;
+}
+
+/* Firefox scrollbar styles */
+.theme-green * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-thumb-active) var(--bg-scroll);
+}
+
+/* Additional CRT effects */
+.theme-green .nav-link,
+.theme-green .session-item,
+.theme-green .button {
+    transition: all 0.2s ease, text-shadow 0.1s ease, box-shadow 0.1s ease;
+}
+
+.theme-green .nav-link:hover,
+.theme-green .session-item:hover {
+    text-shadow: 0 0 3px #00ff00, 0 0 6px #00ff00;
+    box-shadow: 0 0 4px #00ff0030;
+}
+
+/* Screen flicker effect (subtle) */
+@keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.98; }
+}
+
+.theme-green {
+    animation: flicker 3s infinite ease-in-out;
+}
+
+/* Disable flicker for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .theme-green {
+        animation: none;
+    }
+}
