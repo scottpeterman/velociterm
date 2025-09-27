@@ -154,7 +154,7 @@ Frontend will open automatically at `http://localhost:3000`
 4. **Add Sessions:** Create your first session or import from NetBox
 5. **Connect:** Click any session to open an SSH terminal
 
-![Virtual Desktop View](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/virtual_desktop.png)
+![Virtual Desktop View](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/search_and_ssh.png)
 
 ## Key Features in Detail
 
@@ -173,7 +173,7 @@ Frontend will open automatically at `http://localhost:3000`
 
 ### Advanced Session Organization
 
-![Settings Interface](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_cyber.png)
+![Settings Interface](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/netbox_settings_cyber.png)
 
 **Smart Filtering:**
 - Search across device names, IP addresses, device types, platforms, and folders
@@ -189,7 +189,7 @@ Frontend will open automatically at `http://localhost:3000`
 
 ### Professional Terminal Experience
 
-![Multi-Terminal with Different Themes](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/multi_window_multi_theme.png)
+![Multi-Terminal with Different Themes](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/per_window_themes.png)
 
 **Multi-Terminal Support:**
 - Open multiple SSH sessions simultaneously in floating windows
@@ -197,7 +197,7 @@ Frontend will open automatically at `http://localhost:3000`
 - Proper window management with drag, resize, minimize, and focus handling
 - Real-time connection status tracking
 
-![Three Terminal Windows](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/3window.png)
+![Three Terminal Windows](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/amber-multi.png)
 
 **Terminal Features:**
 - Full xterm.js integration with addon support (search, web links, fit)
@@ -207,11 +207,10 @@ Frontend will open automatically at `http://localhost:3000`
 
 ### Professional Theme System
 
-![Corporate Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/corp_theme.png)
+![Corporate Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/theme_setting_paper.png)
 
-![Monospace Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/mono_theme.png)
 
-![Theme Selection](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_theme_list.png)
+![Theme Selection](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/better_themes.png)
 
 **13+ Professional Themes:**
 - CRT variants (Cyber, Amber, Green, Mono)
@@ -222,11 +221,8 @@ Frontend will open automatically at `http://localhost:3000`
 
 ### NetBox Integration Excellence
 
-![NetBox Device Search](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/device_search_cyber.png)
+![NetBox Device Search](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/better_themes.png)
 
-![NetBox Device Login](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/netbox_device_login.png)
-
-![Per-User Token Management](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/per_user_token_mgmt.png)
 
 **Device Discovery:**
 - Real-time device search with site, platform, and status filtering
