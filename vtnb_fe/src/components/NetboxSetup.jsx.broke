@@ -1,0 +1,378 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Server,
+  Key,
+  CheckCircle,
+  AlertTriangle,
+  ExternalLink,
+  Save,
+  TestTube,
+  Info,
+  RefreshCw,
+  X
+} from 'lucide-react';
+import { workspaceService } from '../services/workspace';
+
+const NetBoxSetup = () => {
+  const navigate = useNavigate();
+  const [tokenConfig, setTokenConfig] = useState({
+    api_url: '',
+    api_token: '',
+    description: ''
+  });
+  const [currentStatus, setCurrentStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [testResult, setTestResult] = useState(null);
+
+  useEffect(() => {
+    loadCurrentStatus();
+  }, []);
+
+  const loadCurrentStatus = async () => {
+    try {
+      const status = await workspaceService.getNetBoxTokenStatus();
+      setCurrentStatus(status);
+
+      if (status.configured) {
+        setTokenConfig({
+          api_url: status.api_url || '',
+          api_token: '', // Don't pre-fill for security
+          description: status.description || ''
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load NetBox status:', error);
+      setMessage({ type: 'error', text: 'Failed to load current configuration' });
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setTokenConfig(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear messages when user starts typing
+    if (message) setMessage(null);
+    if (testResult) setTestResult(null);
+  };
+
+const handleTestConnection = async () => {
+  if (!tokenConfig.api_url || !tokenConfig.api_token) {
+    setMessage({ type: 'error', text: 'Please enter both API URL and token' });
+    return;
+  }
+
+  setTesting(true);
+  setTestResult(null);
+  setMessage(null);
+
+  try {
+    const result = await workspaceService.configureNetBoxToken(tokenConfig);
+    setTestResult({ type: 'success', ...result });
+    setMessage({
+      type: 'success',
+      text: `NetBox API connection successful! Token authentication verified.`
+    });
+  } catch (error) {
+    setTestResult({ type: 'error', message: error.message });
+    setMessage({ type: 'error', text: error.message });
+  } finally {
+    setTesting(false);
+  }
+};
+
+  const handleSaveConfiguration = async () => {
+    if (!tokenConfig.api_url || !tokenConfig.api_token) {
+      setMessage({ type: 'error', text: 'Please enter both API URL and token' });
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      await workspaceService.configureNetBoxToken(tokenConfig);
+      setMessage({
+        type: 'success',
+        text: 'NetBox configuration saved successfully!'
+      });
+
+      // Refresh status
+      await loadCurrentStatus();
+
+      // Navigate to device search after a short delay
+      setTimeout(() => {
+        navigate('/device-search');
+      }, 1500);
+
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+const handleValidateExisting = async () => {
+  setValidating(true);
+  setMessage(null);
+
+  try {
+    const result = await workspaceService.validateNetBoxToken();
+    setMessage({
+      type: 'success',
+      text: `Token validation successful! NetBox API is accessible.`
+    });
+    await loadCurrentStatus();
+  } catch (error) {
+    setMessage({ type: 'error', text: error.message });
+  } finally {
+    setValidating(false);
+  }
+};
+
+  const handleClose = () => {
+    navigate('/');
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header with Close Button */}
+      <div className="card">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-2 flex items-center">
+              <Server className="h-7 w-7 mr-3 text-blue-400" />
+              NetBox Integration Setup
+            </h1>
+            <p className="text-gray-400">
+              Configure your NetBox API token for device discovery and management
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {currentStatus?.configured && (
+              <div className="flex items-center text-green-400">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                <span className="text-sm font-medium">Connected</span>
+              </div>
+            )}
+            <button
+              onClick={handleClose}
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Current Status */}
+      {currentStatus?.configured && (
+        <div className="card">
+          <h2 className="text-lg font-semibold text-white mb-4">Current Configuration</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                NetBox URL
+              </label>
+              <p className="text-white bg-gray-700 p-3 rounded-lg">
+                {currentStatus.api_url}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Description
+              </label>
+              <p className="text-white bg-gray-700 p-3 rounded-lg">
+                {currentStatus.description || 'No description'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-400">
+              Last validated: {currentStatus.last_validated
+                ? new Date(currentStatus.last_validated).toLocaleString()
+                : 'Never'
+              }
+            </div>
+            <button
+              onClick={handleValidateExisting}
+              disabled={validating}
+              className="btn-secondary flex items-center"
+            >
+              {validating ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <TestTube className="h-4 w-4 mr-2" />
+              )}
+              Validate Token
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Setup Instructions */}
+      <div className="card">
+        <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+          <Info className="h-5 w-5 mr-2 text-cyan-400" />
+          Setup Instructions
+        </h2>
+        <div className="space-y-4 text-gray-300">
+          <div className="bg-gray-700 p-4 rounded-lg">
+            <h3 className="font-medium text-white mb-2">Step 1: Create API Token in NetBox</h3>
+            <ol className="list-decimal list-inside space-y-1 text-sm">
+              <li>Log into your NetBox instance</li>
+              <li>Navigate to your user profile (top right menu)</li>
+              <li>Go to "API Tokens" section</li>
+              <li>Click "Add a token" or "Create Token"</li>
+              <li>Set appropriate permissions (dcim.view_device, dcim.view_site, etc.)</li>
+              <li>Copy the generated token</li>
+            </ol>
+          </div>
+          <div className="bg-gray-700 p-4 rounded-lg">
+            <h3 className="font-medium text-white mb-2">Step 2: Configure Token Below</h3>
+            <p className="text-sm">
+              Enter your NetBox URL and the API token you just created.
+              The token will be encrypted and stored securely in your workspace.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Configuration Form */}
+      <div className="card">
+        <h2 className="text-lg font-semibold text-white mb-6 flex items-center">
+          <Key className="h-5 w-5 mr-2 text-green-400" />
+          {currentStatus?.configured ? 'Update Configuration' : 'Configure NetBox Token'}
+        </h2>
+
+        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          {/* API URL */}
+          <div>
+            <label htmlFor="api_url" className="block text-sm font-medium text-gray-300 mb-2">
+              NetBox API URL
+            </label>
+            <input
+              type="url"
+              id="api_url"
+              name="api_url"
+              value={tokenConfig.api_url}
+              onChange={handleInputChange}
+              placeholder="https://netbox.company.com"
+              className="form-input"
+              disabled={loading || testing}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              The base URL of your NetBox instance (without /api/ suffix)
+            </p>
+          </div>
+
+          {/* API Token */}
+          <div>
+            <label htmlFor="api_token" className="block text-sm font-medium text-gray-300 mb-2">
+              API Token
+            </label>
+            <input
+              type="password"
+              id="api_token"
+              name="api_token"
+              value={tokenConfig.api_token}
+              onChange={handleInputChange}
+              placeholder="Enter your NetBox API token"
+              className="form-input"
+              disabled={loading || testing}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Your personal NetBox API token with appropriate permissions
+            </p>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
+              Description (Optional)
+            </label>
+            <input
+              type="text"
+              id="description"
+              name="description"
+              value={tokenConfig.description}
+              onChange={handleInputChange}
+              placeholder="VelociTerm Integration Token"
+              className="form-input"
+              disabled={loading || testing}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              A description to help you identify this token
+            </p>
+          </div>
+
+          {/* Messages */}
+          {message && (
+            <div className={`p-4 rounded-lg border ${
+              message.type === 'success'
+                ? 'status-success'
+                : 'status-error'
+            }`}>
+              <p className="text-sm">{message.text}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={loading || testing || !tokenConfig.api_url || !tokenConfig.api_token}
+              className="btn-secondary flex items-center justify-center"
+            >
+              {testing ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <TestTube className="h-4 w-4 mr-2" />
+              )}
+              Test Connection
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSaveConfiguration}
+              disabled={loading || testing || !tokenConfig.api_url || !tokenConfig.api_token}
+              className="btn-primary flex items-center justify-center"
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {currentStatus?.configured ? 'Update Configuration' : 'Save Configuration'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Security Notice */}
+      <div className="card bg-blue-900 bg-opacity-30 border-blue-700">
+        <div className="flex items-start">
+          <Info className="h-5 w-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium text-blue-300 mb-2">Security & Privacy</h3>
+            <p className="text-blue-100 text-sm">
+              Your NetBox API token is encrypted using industry-standard encryption and stored
+              securely in your personal workspace. Only you can access your token, and it's
+              never transmitted or stored in plain text.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NetBoxSetup;

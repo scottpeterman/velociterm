@@ -1,0 +1,287 @@
+/* Monochrome MS-DOS theme - scoped to .theme-mono class */
+.theme-mono {
+    /* CSS Custom Properties scoped to theme */
+    --bg-main: #000000 !important; /* Pure black background */
+    --bg-sidebar: #111111 !important; /* Very dark gray for sidebar */
+    --bg-accordion: #1a1a1a; /* Dark gray for accordion */
+    --bg-accordion-header: #2a2a2a; /* Medium gray for headers */
+    --bg-accordion-content: #000000; /* Pure black for content areas */
+    --bg-button: #333333; /* Medium gray for buttons */
+    --bg-scroll: #1a1a1a; /* Dark gray for scrollbars */
+    --bg-thumb-active: #666666; /* Light gray for scrollbar thumb */
+    --bg-thumb-hover: #ffffff; /* White for hover */
+    --bg-button-hover: #444444; /* Lighter gray for button hover */
+    --bg-input: #111111; /* Very dark gray for input */
+    --bg-tab: #1a1a1a; /* Dark gray for tabs */
+    --bg-tab-active: #ffffff; /* White for active tab */
+    --text-color: #ffffff; /* Pure white text */
+    --text-accordion: #ffffff; /* White text */
+    --text-button: #ffffff; /* White text */
+    --text-tab: #000000; /* Black text for active tab contrast */
+    --text-tab-inactive: #cccccc; /* Light gray for inactive */
+    --text-dim: #888888; /* Medium gray for secondary text */
+    --border-color: #666666; /* Medium gray for borders */
+    --border-focus: #ffffff; /* White for focus states */
+    --bg-highlight: #ffffff; /* White highlight */
+    --text-highlight: #000000; /* Black text on highlight */
+
+    /* Terminal-style fonts - same as original */
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    --font-ui: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
+}
+
+/* Apply terminal fonts globally to the theme */
+.theme-mono,
+.theme-mono body,
+.theme-mono * {
+    font-family: var(--font-mono) !important;
+}
+
+/* Clean, sharp text - no glow effects */
+.theme-mono h1,
+.theme-mono h2,
+.theme-mono h3,
+.theme-mono h4,
+.theme-mono h5,
+.theme-mono h6 {
+    font-family: var(--font-ui) !important;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* Specific font styling for different elements */
+.theme-mono .button,
+.theme-mono .tab-button,
+.theme-mono .form-input,
+.theme-mono input,
+.theme-mono textarea,
+.theme-mono select {
+    font-family: var(--font-mono) !important;
+    font-weight: 400;
+}
+
+.theme-mono code,
+.theme-mono pre,
+.theme-mono .terminal,
+.theme-mono .console {
+    font-family: var(--font-mono) !important;
+    font-weight: 400;
+    background-color: #1a1a1a;
+    color: var(--text-color);
+    padding: 2px 4px;
+    border: 1px solid var(--border-color);
+}
+
+/* All selectors scoped under .theme-mono */
+.theme-mono body,
+.theme-mono {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+}
+
+.theme-mono .custom-bg-color {
+    background-color: var(--bg-sidebar);
+}
+
+.theme-mono #tab-contents {
+    position: relative;
+    background-color: var(--bg-main);
+}
+
+.theme-mono .sidebar {
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+}
+
+.theme-mono .accordion-header {
+    background-color: var(--bg-accordion-header);
+    color: var(--text-accordion);
+    border: 1px solid var(--border-color);
+}
+
+.theme-mono .accordion-content {
+    background-color: var(--bg-accordion-content);
+    color: var(--text-accordion);
+    border: 1px solid var(--border-color);
+    border-top: none;
+}
+
+.theme-mono .button {
+    background-color: var(--bg-button);
+    color: var(--text-button);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.theme-mono .button:hover {
+    background-color: var(--bg-button-hover);
+    border-color: var(--text-color);
+}
+
+.theme-mono .button:active {
+    background-color: var(--bg-highlight);
+    color: var(--text-highlight);
+}
+
+.theme-mono .form-input {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.theme-mono .form-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    background-color: var(--bg-main);
+}
+
+.theme-mono .tab-button {
+    background-color: var(--bg-tab);
+    color: var(--text-tab-inactive);
+    padding: 0.5em 1em;
+    margin-right: 0.5em;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 0; /* Sharp corners for DOS feel */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.theme-mono .tab-button:hover {
+    background-color: var(--bg-button-hover);
+    color: var(--text-color);
+}
+
+.theme-mono .tab-button.active-button {
+    background-color: var(--bg-tab-active);
+    color: var(--text-tab);
+    border-bottom: 1px solid var(--bg-main);
+    font-weight: 700;
+}
+
+.theme-mono #tab-contents {
+    border: 1px solid var(--border-color);
+}
+
+.theme-mono .active-tab {
+    border-top: none;
+}
+
+.theme-mono #tab-buttons {
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.theme-mono .tab-content {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+    padding: 1em;
+    border-radius: 0; /* Sharp corners */
+    display: none;
+}
+
+.theme-mono .active-tab .tab-content {
+    display: block;
+}
+
+.theme-mono .search-input {
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-color);
+}
+
+.theme-mono .search-input:focus {
+    border-bottom-color: var(--text-color);
+}
+
+.theme-mono .bg-light,
+.theme-mono .bg-white {
+    background-color: #000 !important;
+    color: var(--text-color) !important;
+}
+
+/* Simple scrollbar styles - no fancy effects */
+.theme-mono ::-webkit-scrollbar {
+    width: 12px !important;
+}
+
+.theme-mono ::-webkit-scrollbar-track {
+    background: var(--bg-scroll) !important;
+    border: 1px solid var(--border-color);
+}
+
+.theme-mono ::-webkit-scrollbar-thumb {
+    background: var(--bg-thumb-active) !important;
+    border: 1px solid var(--border-color);
+}
+
+.theme-mono ::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-thumb-hover) !important;
+}
+
+/* Firefox scrollbar styles */
+.theme-mono * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-thumb-active) var(--bg-scroll);
+}
+
+/* Secondary text styling */
+.theme-mono .text-secondary,
+.theme-mono .secondary-text {
+    color: var(--text-dim);
+}
+
+/* Links styling - simple underline */
+.theme-mono a {
+    color: var(--text-color);
+    text-decoration: underline;
+}
+
+.theme-mono a:hover {
+    color: var(--text-color);
+    background-color: var(--text-color);
+    color: var(--bg-main);
+}
+
+/* Selection styling */
+.theme-mono ::selection {
+    background-color: var(--text-color);
+    color: var(--bg-main);
+}
+
+.theme-mono ::-moz-selection {
+    background-color: var(--text-color);
+    color: var(--bg-main);
+}
+
+/* DOS-style borders and boxes */
+.theme-mono .box,
+.theme-mono .panel {
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-main);
+}
+
+.theme-mono .box-header {
+    background-color: var(--bg-highlight);
+    color: var(--text-highlight);
+    padding: 0.25em 0.5em;
+    font-weight: 700;
+}
+
+/* Table styling for DOS feel */
+.theme-mono table {
+    border-collapse: collapse;
+    border: 1px solid var(--border-color);
+}
+
+.theme-mono th,
+.theme-mono td {
+    border: 1px solid var(--border-color);
+    padding: 0.25em 0.5em;
+}
+
+.theme-mono th {
+    background-color: var(--bg-highlight);
+    color: var(--text-highlight);
+    font-weight: 700;
+}

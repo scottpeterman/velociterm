@@ -1,0 +1,195 @@
+/* Cyberpunk theme - scoped to .theme-cyber class */
+.theme-cyber {
+    /* CSS Custom Properties scoped to theme */
+    --bg-main: #000000 !important; /* Pure black background */
+    --bg-sidebar: #000a0d !important; /* Very dark cyan for sidebar */
+    --bg-accordion: #001719; /* Dark cyan for accordion */
+    --bg-accordion-header: #002629; /* Slightly darker cyan for headers */
+    --bg-accordion-content: #000000; /* Pure black for content areas */
+    --bg-button: #003b3f; /* Medium cyan for buttons */
+    --bg-scroll: #002629; /* Dark cyan for scrollbars */
+    --bg-thumb-active: #0a8993; /* Bright cyan for scrollbar thumb */
+    --bg-thumb-hover: #0affff; /* Brighter cyan for hover */
+    --bg-button-hover: #004d52; /* Lighter cyan for button hover */
+    --bg-input: #000d0f; /* Very dark cyan for input */
+    --bg-tab: #001719; /* Dark cyan for tabs */
+    --bg-tab-active: #0affff; /* Bright cyan for active tab */
+    --text-color: #0affff; /* Classic cyan text */
+    --text-accordion: #0affff; /* Matching cyan text */
+    --text-button: #0affff; /* Matching cyan text */
+    --text-tab: #000000; /* Black text for active tab contrast */
+    --text-tab-inactive: #0a8993; /* Dimmer cyan for inactive */
+    --border-color: #0a8993; /* Medium cyan for borders */
+    --border-focus: #0affff; /* Bright cyan for focus states */
+
+    /* Terminal-style fonts */
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    --font-ui: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
+}
+
+/* Apply terminal fonts globally to the theme */
+.theme-cyber,
+.theme-cyber body,
+.theme-cyber * {
+    font-family: var(--font-mono) !important;
+}
+
+/* Specific font styling for different elements */
+.theme-cyber h1,
+.theme-cyber h2,
+.theme-cyber h3,
+.theme-cyber h4,
+.theme-cyber h5,
+.theme-cyber h6 {
+    font-family: var(--font-ui) !important;
+    font-weight: 600;
+}
+
+.theme-cyber .button,
+.theme-cyber .tab-button,
+.theme-cyber .form-input,
+.theme-cyber input,
+.theme-cyber textarea,
+.theme-cyber select {
+    font-family: var(--font-mono) !important;
+    font-weight: 400;
+}
+
+.theme-cyber code,
+.theme-cyber pre,
+.theme-cyber .terminal,
+.theme-cyber .console {
+    font-family: var(--font-mono) !important;
+    font-weight: 400;
+}
+
+/* All selectors scoped under .theme-cyber */
+.theme-cyber body,
+.theme-cyber {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+}
+
+.theme-cyber .custom-bg-color {
+    background-color: var(--bg-sidebar); /* Use your chosen variable color */
+}
+
+.theme-cyber #tab-contents {
+    position: relative;
+    background-color: var(--bg-main);
+}
+
+.theme-cyber .sidebar {
+    background-color: var(--bg-sidebar);
+}
+
+.theme-cyber .accordion-header {
+    background-color: var(--bg-accordion-header);
+}
+
+.theme-cyber .accordion-content {
+    background-color: var(--bg-accordion-content);
+    color: var(--text-accordion);
+}
+
+.theme-cyber .button {
+    background-color: var(--bg-button);
+    color: var(--text-button);
+}
+
+.theme-cyber .button:hover {
+    background-color: var(--bg-button-hover);
+}
+
+.theme-cyber .form-input {
+    background-color: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.theme-cyber .form-input:focus {
+    outline: 2px solid var(--border-focus);
+    box-shadow: none;
+}
+
+.theme-cyber .tab-button {
+    background-color: var(--bg-tab);
+    color: var(--text-tab-inactive);
+    padding: 0.5em 1em;
+    margin-right: 0.5em;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.theme-cyber .tab-button:hover {
+    background-color: var(--bg-button-hover);
+}
+
+.theme-cyber .tab-button.active-button {
+    background-color: var(--bg-tab-active);
+    color: var(--text-tab);
+    border-bottom: 1px solid var(--bg-main);
+}
+
+.theme-cyber #tab-contents {
+    border: 1px solid var(--border-color);
+}
+
+.theme-cyber .active-tab {
+    border-top: none;
+}
+
+.theme-cyber #tab-buttons {
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.theme-cyber .tab-content {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+    padding: 1em;
+    border-radius: 0 0 5px 5px;
+    display: none;
+}
+
+.theme-cyber .active-tab .tab-content {
+    display: block;
+}
+
+.theme-cyber .search-input {
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-color);
+}
+
+.theme-cyber .bg-light,
+.theme-cyber .bg-white {
+    background-color: #000 !important;
+}
+
+/* Scrollbar styles scoped to theme */
+.theme-cyber ::-webkit-scrollbar {
+    width: 12px !important;
+}
+
+.theme-cyber ::-webkit-scrollbar-track {
+    background: var(--bg-scroll) !important;
+}
+
+.theme-cyber ::-webkit-scrollbar-thumb {
+    background: var(--bg-thumb-active) !important;
+    border-radius: 6px !important;
+}
+
+.theme-cyber ::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-thumb-hover) !important;
+}
+
+/* Firefox scrollbar styles */
+.theme-cyber * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-thumb-active) var(--bg-scroll);
+}

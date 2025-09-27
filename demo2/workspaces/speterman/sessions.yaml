@@ -1,0 +1,185 @@
+- folder_name: Lab Network
+  sessions:
+  - DeviceType: cisco_ios
+    Model: CSR1000V
+    SerialNumber: ''
+    SoftwareVersion: '15.7'
+    Vendor: Cisco
+    credsid: ''
+    display_name: usa-rtr-1
+    host: 172.16.1.1
+    platform: IOSv Image
+    port: '22'
+  - DeviceType: arista_eos
+    Model: vEOS
+    SerialNumber: ''
+    SoftwareVersion: 4.29.2F
+    Vendor: Arista
+    credsid: ''
+    display_name: usa-spine-1
+    host: 172.16.10.2
+    platform: ''
+    port: '22'
+  - DeviceType: arista_eos
+    Model: vEOS
+    SerialNumber: ''
+    SoftwareVersion: 4.29.2F
+    Vendor: Arista
+    credsid: ''
+    display_name: usa-spine-2
+    host: 172.16.10.3
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: IOSv-L2
+    SerialNumber: ''
+    SoftwareVersion: '15.2'
+    Vendor: Cisco
+    credsid: ''
+    display_name: usa-leaf-1
+    host: 172.16.10.21
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: IOSv-L2
+    SerialNumber: ''
+    SoftwareVersion: '15.2'
+    Vendor: Cisco
+    credsid: ''
+    display_name: usa-leaf-2
+    host: 172.16.10.22
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: IOSv-L2
+    SerialNumber: ''
+    SoftwareVersion: '15.2'
+    Vendor: Cisco
+    credsid: ''
+    display_name: usa-leaf-3
+    host: 172.16.10.23
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: CSR1000V
+    SerialNumber: ''
+    SoftwareVersion: '15.7'
+    Vendor: Cisco
+    credsid: ''
+    display_name: eng-rtr-1
+    host: 172.16.2.1
+    platform: ''
+    port: '22'
+  - DeviceType: arista_eos
+    Model: vEOS
+    SerialNumber: ''
+    SoftwareVersion: 4.29.2F
+    Vendor: Arista
+    credsid: ''
+    display_name: eng-spine-1
+    host: 172.16.11.2
+    platform: ''
+    port: '22'
+  - DeviceType: arista_eos
+    Model: vEOS
+    SerialNumber: ''
+    SoftwareVersion: 4.29.2F
+    Vendor: Arista
+    credsid: ''
+    display_name: eng-spine-2
+    host: 172.16.11.3
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: IOSv-L2
+    SerialNumber: ''
+    SoftwareVersion: '15.2'
+    Vendor: Cisco
+    credsid: ''
+    display_name: eng-leaf-1
+    host: 172.16.11.21
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: IOSv-L2
+    SerialNumber: ''
+    SoftwareVersion: '15.2'
+    Vendor: Cisco
+    credsid: ''
+    display_name: eng-leaf-2
+    host: 172.16.11.42
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: IOSv-L2
+    SerialNumber: ''
+    SoftwareVersion: '15.2'
+    Vendor: Cisco
+    credsid: ''
+    display_name: eng-leaf-3
+    host: 172.16.11.43
+    platform: ''
+    port: '22'
+- folder_name: Home
+  sessions:
+  - DeviceType: linux
+    Model: Thinkstation
+    SerialNumber: ''
+    SoftwareVersion: ''
+    Vendor: Lenovo
+    credsid: '1'
+    display_name: T1000
+    host: 10.0.0.108
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: ''
+    SerialNumber: ''
+    SoftwareVersion: ''
+    Vendor: ''
+    credsid: ''
+    display_name: usa1-rtr1
+    host: 172.16.101.100
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios
+    Model: ''
+    SerialNumber: ''
+    SoftwareVersion: ''
+    Vendor: ''
+    credsid: ''
+    display_name: usa1-access-01
+    host: 172.16.99.13
+    platform: ''
+    port: '22'
+  - DeviceType: arista_eos
+    Model: ''
+    SerialNumber: ''
+    SoftwareVersion: ''
+    Vendor: ''
+    credsid: ''
+    display_name: usa1-sw-d-1
+    host: 172.16.2.134
+    platform: ''
+    port: '22'
+  - DeviceType: cisco_ios_xe
+    Model: ''
+    SerialNumber: ''
+    SoftwareVersion: ''
+    Vendor: ''
+    credsid: ''
+    display_name: usa1-core-01
+    host: 172.16.2.130
+    platform: ''
+    port: '22'
+  - DeviceType: arista_eos
+    Model: ''
+    SerialNumber: ''
+    SoftwareVersion: ''
+    Vendor: ''
+    credsid: ''
+    display_name: usa1-sw-a-a-1
+    host: 172.16.98.32
+    platform: ''
+    port: '22'
+
