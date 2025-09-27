@@ -91,7 +91,7 @@ VelociTerm NB solves the common problem of managing dozens or hundreds of networ
 
 ### Prerequisites
 
-- **Python 3.8+** with venv support
+- **Python 3.12+** with venv support
 - **Node.js v20+** (tested with v20.9.0) 
 - **Git** for cloning the repository
 - **System Credentials**: Windows or Linux user account for authentication
