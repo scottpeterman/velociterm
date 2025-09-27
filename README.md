@@ -1,5 +1,9 @@
 # VelociTerm NB
 
+> **⚠️ ALPHA SOFTWARE - NOT FOR PRODUCTION USE**
+> 
+> VelociTerm NB is currently in alpha development phase. While fully functional for testing and evaluation, it should **NOT** be used in production environments. The authentication system has been significantly enhanced for secure testing, but additional security hardening and features are planned before production readiness.
+
 **Professional Terminal Session Management for Network Engineers**
 
 ![VelociTerm NB Demo](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/slides3.gif)
@@ -30,49 +34,67 @@ VelociTerm NB solves the common problem of managing dozens or hundreds of networ
 - Automatic session creation with proper metadata
 - Encrypted per-user API token storage
 
+**Enterprise Authentication:**
+- Dual authentication system: JWT tokens and session cookies
+- Local system authentication (Windows/Linux credentials)
+- LDAP/Active Directory integration ready
+- Secure token management with automatic refresh
+
 **Legacy Format Compatibility:**
 - Works seamlessly with existing session files from other tools
 - Reads and writes standard YAML formats without disruption
 - No migration required for existing workflows
 
-## Who Should Use VelociTerm NB?
-
-**Primary Users:**
-- Network Engineers managing router/switch infrastructure
-- NOC teams needing organized device access
-- System Administrators with server fleets
-- DevOps teams managing cloud and on-premises infrastructure
-
-**Use Cases:**
-- Daily network device management and troubleshooting
-- Organized access to lab and production environments  
-- NetBox-driven device lifecycle management
-- Team environments requiring consistent device organization
-- Migration from traditional SSH client workflows
-
 ## Current Project Status
 
-**Demo Ready:** VelociTerm NB is fully functional for demonstration and pilot deployments. Core functionality is production-quality with some authentication enhancements planned.
+> **🔬 ALPHA RELEASE - EVALUATION READY**
+> 
+> VelociTerm NB is fully functional for testing, evaluation, and development environments. The enhanced authentication system provides secure access for testing purposes, but production deployment requires additional security hardening and features currently in development.
+
+**Development Status:**
+- **Core Functionality**: Fully operational and stable
+- **Authentication**: Enhanced security with dual JWT/Session system
+- **User Interface**: Production-quality experience
+- **NetBox Integration**: Complete and tested
+- **Multi-Terminal SSH**: Stable and performant
 
 **Architecture:**
 - **Frontend:** React 18 with modern hooks, xterm.js terminals, WebSocket communication
 - **Backend:** Python FastAPI with real-time WebSocket support, encrypted storage, NetBox API integration
-- **Security:** Session-based authentication, encrypted credentials, per-user workspaces
+- **Security:** Enhanced dual authentication (JWT + Session), encrypted credentials, per-user workspaces
 
-**Production Readiness:**
-- Core session management: Production ready
-- Multi-terminal SSH: Production ready  
-- NetBox integration: Production ready
-- User interface: Production ready
-- Authentication: POC level (enhancement roadmap available)
+**Alpha Status Features:**
+- Core session management: ✅ Fully functional
+- Multi-terminal SSH: ✅ Stable and tested
+- NetBox integration: ✅ Complete
+- User interface: ✅ Production-quality
+- Authentication: ✅ Enhanced security for testing
+- Production hardening: 🚧 In development
+
+## Security Notice
+
+**Enhanced for Testing:**
+- Real system authentication required (Windows/Linux credentials)
+- JWT token management with automatic refresh
+- Encrypted per-user workspaces
+- Session-based WebSocket security
+- No demonstration/POC authentication modes
+
+**Production Readiness Roadmap:**
+- Advanced user management and role-based access control
+- Comprehensive audit logging and compliance features
+- Multi-factor authentication integration
+- Enterprise-grade session management
+- Security certification and penetration testing
 
 ## Quick Start
 
 ### Prerequisites
 
-- **Python 3.12+** with venv support
-- **Node.js v20+** (tested with v20.9.0)
+- **Python 3.8+** with venv support
+- **Node.js v20+** (tested with v20.9.0) 
 - **Git** for cloning the repository
+- **System Credentials**: Windows or Linux user account for authentication
 
 ### Setup Instructions
 
@@ -96,6 +118,9 @@ venv\Scripts\activate     # Windows
 # Install dependencies
 pip install -r requirements.txt
 
+# Optional: Configure JWT settings for testing
+export JWT_ACCESS_TOKEN_EXPIRE_MINUTES=2880  # 48 hours for testing
+
 # Start backend server
 python main.py
 ```
@@ -114,20 +139,37 @@ npm start
 ```
 Frontend will open automatically at `http://localhost:3000`
 
-**That's it!** VelociTerm NB is now running and ready to use.
+**Authentication:**
+- Use your **actual system credentials** (Windows/Linux username and password)
+- Toggle between JWT Token mode and Session Cookie mode
+- User workspace created automatically on first login
 
 ![Login Interface](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/login.png)
 
 ### First Steps
 
-1. **Login:** Use any username/password (POC authentication)
-2. **Configure NetBox (optional):** Add your NetBox API token in Settings
-3. **Add Sessions:** Create your first session or import from NetBox
-4. **Connect:** Click any session to open an SSH terminal
+1. **Login:** Enter your Windows/Linux system username and password
+2. **Choose Auth Mode:** Toggle between Session and JWT authentication
+3. **Configure NetBox (optional):** Add your NetBox API token in Settings
+4. **Add Sessions:** Create your first session or import from NetBox
+5. **Connect:** Click any session to open an SSH terminal
 
 ![Virtual Desktop View](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/virtual_desktop.png)
 
 ## Key Features in Detail
+
+### Enhanced Authentication System
+
+**Dual Authentication Modes:**
+- **JWT Token Authentication**: Modern stateless authentication with automatic token refresh
+- **Session Cookie Authentication**: Traditional authentication optimized for WebSocket connections
+- **User Choice**: Toggle between authentication methods on login screen
+- **Secure Fallback**: Automatic fallback between authentication modes
+
+**Authentication Methods:**
+- **Local Authentication**: Windows/Linux system credentials with secure validation
+- **LDAP Integration**: Enterprise directory authentication (configurable)
+- **Real Credentials Required**: No demonstration modes - actual system authentication only
 
 ### Advanced Session Organization
 
@@ -191,105 +233,81 @@ Frontend will open automatically at `http://localhost:3000`
 - Compact and card view modes for different workflows
 - Bulk device selection and import capabilities
 - Connection testing and API validation
-
-**Seamless Workflow:**
-1. Configure encrypted NetBox API token
-2. Search and filter devices by criteria
-3. Select devices for import (single or bulk)
-4. Sessions created automatically with NetBox metadata
-5. Connect immediately or organize in custom folders
-
-### Legacy Compatibility
-
-**Existing Tool Integration:**
-VelociTerm NB works with existing session files from other network tools:
-
-```yaml
-# Your existing format works unchanged
-- folder_name: "Lab Network"
-  sessions:
-    - DeviceType: cisco_ios      # Automatically mapped internally
-      display_name: usa-rtr-1
-      host: 172.16.1.1
-      port: '22'                 # String ports handled correctly
-```
-
-**Theme Consistency Across All Interfaces:**
-
-![Settings - Cyber Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_cyber.png)
-
-![Settings - Light Theme](https://raw.githubusercontent.com/scottpeterman/velociterm/refs/heads/dev/screenshots/settings_light.png)
-
-**Benefits:**
-- No migration required for existing workflows
-- Maintains compatibility with other tools in your ecosystem
-- Preserves investment in current session organization
-- Complete theme integration across all application interfaces
+- Secure per-user token management
 
 ## Architecture Overview
 
 ### Component Structure
 
 **Backend (Python/FastAPI):**
-- Session-authenticated API with comprehensive CRUD operations
+- Enhanced dual authentication API (JWT + Session)
 - Real-time WebSocket SSH terminal management
 - Encrypted per-user workspaces with secure credential storage  
 - NetBox API integration with error handling and validation
-- Tool execution framework for network utilities
+- Modular authentication system supporting multiple backends
 
 **Frontend (React):**
 - Modern component architecture with performance optimization
 - Advanced session management with real-time filtering
 - Professional window management with floating terminals
 - Complete theme system with 13+ variants
-- Responsive design supporting desktop and tablet usage
+- Authentication mode selection and transparent token management
 
 ### Security Model
 
-**Current Implementation:**
-- Session-based authentication with secure cookie management
+**Current Alpha Implementation:**
+- Enhanced dual authentication system (JWT + Session)
+- Real system credential validation (Windows/Linux)
 - Per-user encrypted workspaces using PBKDF2 key derivation
-- No credential persistence in browser storage
+- Automatic JWT token refresh with graceful fallback
 - IP-based WebSocket validation for terminal access
-- Automatic session cleanup and security timeouts
+- Secure cookie management and session cleanup
 
-**Production Roadmap:**
-- User-controlled master passwords
-- LDAP/Active Directory integration
+**Production Security Roadmap:**
 - Multi-factor authentication support
-- Role-based access control
-- Comprehensive audit logging
+- Role-based access control with granular permissions
+- Comprehensive audit logging and compliance reporting
+- Advanced session management with timeout policies
+- Security certification and penetration testing
 
-## Development and Deployment
+## Deployment Options
 
-### Development Environment
+### Development/Testing Environment
 
-The development setup is designed for immediate productivity:
+The current setup is designed for development and secure testing:
 
-**Hot Reload:**
-- Backend auto-reloads on Python file changes
-- Frontend hot-reloads on React component updates
-- WebSocket connections maintained during development
-
-**Debugging:**
+**Development Features:**
+- Hot reload for both backend and frontend
 - Comprehensive logging with configurable levels
 - Browser developer tools integration
-- WebSocket message inspection
-- Error boundary reporting
+- WebSocket message inspection and debugging
 
-### Production Deployment Considerations
+**Testing Security:**
+- Real authentication required (no demo modes)
+- Encrypted workspace storage
+- Secure token management
+- Session isolation and cleanup
 
-**Scaling Characteristics:**
-- Supports 50+ concurrent users tested
-- 100+ simultaneous SSH sessions per user
-- Handles thousands of saved sessions efficiently
-- Low resource overhead (~50MB base + 5MB per active SSH session)
+### Alpha Testing Deployment
 
-**Deployment Options:**
-- Single-server deployment for teams up to 100 users
-- Container-ready with Docker support planned
-- Reverse proxy compatible (nginx, Apache)
-- SSL/HTTPS support for production security
+**Single-Server Testing:**
+```bash
+# Production build testing
+cd vtnb_fe
+npm run build
+cp -r build/* ../static/
+
+# Run with enhanced security
+export JWT_SECRET_KEY="$(openssl rand -base64 32)"
+export JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+python main.py
+```
+
+**Security Considerations for Testing:**
+- Use HTTPS in any networked testing environment
+- Implement proper firewall rules
+- Monitor authentication logs
+- Limit access to authorized test users only
 
 ## Contributing and Support
 
@@ -297,16 +315,20 @@ The development setup is designed for immediate productivity:
 
 ```
 velociterm/
-├── main.py                 # Backend entry point
-├── requirements.txt        # Python dependencies
-├── models.py              # Data models and schemas
-├── workspace_manager.py   # Session and workspace management
-├── connection_handlers.py # WebSocket and SSH management
-├── README_Backend.md      # Backend documentation
-└── vtnb_fe/              # Frontend application
-    ├── package.json      # Node.js dependencies
-    ├── src/              # React components and logic
-    └── README_Frontend.md # Frontend documentation
+├── main.py                      # Backend entry point with JWT support
+├── requirements.txt             # Python dependencies
+├── config.yaml                  # Authentication configuration
+├── models.py                   # Data models and schemas
+├── workspace_manager.py        # Session and workspace management
+├── routes/                     # Modular authentication system
+│   ├── auth.py                # JWT + Session authentication
+│   ├── jwt_handler.py         # JWT token management
+│   └── auth_dependencies.py   # Dual authentication support
+├── README_Backend.md           # Backend documentation
+└── vtnb_fe/                   # Frontend application
+    ├── package.json           # Node.js dependencies
+    ├── src/                   # React components with auth support
+    └── README_Frontend.md     # Frontend documentation
 ```
 
 ### Development Workflow
@@ -314,44 +336,69 @@ velociterm/
 **Getting Started:**
 1. Fork the repository and create a feature branch
 2. Follow the setup instructions above
-3. Make changes and test locally
+3. Test with both JWT and Session authentication modes
 4. Submit pull requests with detailed descriptions
 
 **Code Standards:**
 - Python: Follow PEP 8 with comprehensive error handling
 - React: Component-based architecture with performance optimization
+- Authentication: Test both JWT and Session modes
 - Documentation: Update READMEs for significant changes
-- Testing: Include test cases for new functionality
 
-## Roadmap
+## Alpha Testing Guidelines
 
-### Near-Term Enhancements
+### Recommended Testing Environments
 
-**Authentication & Security:**
-- Enhanced authentication with LDAP/AD support
-- User-controlled encryption keys
+**Suitable for Alpha Testing:**
+- Development and staging environments
+- Internal testing and evaluation
+- Proof-of-concept deployments
+- Educational and training use
+
+**NOT Suitable (Production Environments):**
+- Customer-facing systems
+- Business-critical infrastructure
+- Uncontrolled network access
+- Production device management
+
+### Reporting Issues
+
+When reporting issues during alpha testing:
+1. Include authentication mode used (JWT vs Session)
+2. Specify authentication method (Local vs LDAP)
+3. Provide browser and system information
+4. Include relevant console errors
+5. Document steps to reproduce
+
+## Roadmap to Production
+
+### Near-Term (Current Development)
+
+**Security Enhancements:**
+- Advanced user management and role-based access control
 - Multi-factor authentication integration
-- Role-based access control
+- Comprehensive audit logging
+- Enhanced session management policies
 
-**User Experience:**
-- Mobile-responsive improvements
-- Additional theme variants
-- Session templates and cloning
-- Connection scheduling
+**Enterprise Features:**
+- LDAP/Active Directory production integration
+- Team collaboration and session sharing
+- Configuration management integration
+- High availability deployment options
 
 ### Medium-Term Goals
 
-**Enterprise Features:**
-- Multi-tenant support with organization isolation
-- Team collaboration and session sharing
-- Comprehensive audit logging and compliance reporting
-- High availability deployment options
+**Production Readiness:**
+- Security certification and penetration testing
+- Performance optimization for enterprise scale
+- Container deployment with orchestration
+- Backup and disaster recovery features
 
 **Integration Expansion:**
-- Additional DCIM platform support (Device42, etc.)
-- Configuration management integration
+- Additional DCIM platform support
 - Monitoring system connectivity
 - API extensibility for custom integrations
+- Mobile application development
 
 ## License and Acknowledgments
 
@@ -362,10 +409,16 @@ VelociTerm NB is developed for network professionals who need efficient, organiz
 - **React:** Modern user interface framework  
 - **FastAPI:** High-performance Python web framework
 - **Paramiko:** Pure Python SSH implementation
+- **PyJWT:** JSON Web Token implementation
 
 ---
 
-*VelociTerm NB - Streamlining network device management for infrastructure professionals*
+> **⚠️ ALPHA SOFTWARE REMINDER**
+> 
+> VelociTerm NB is currently in alpha development. While fully functional and significantly more secure than initial versions, it is not ready for production deployment. Use only in testing, development, and evaluation environments.
+
+*VelociTerm NB - Alpha Release for Testing and Evaluation*
 
 **Repository:** https://github.com/scottpeterman/velociterm/tree/dev  
-**Demo Ready:** Clone, install, and run in under 5 minutes
+**Status:** Alpha - Functional for testing, enhanced security, not production-ready  
+**Setup Time:** Clone, install, and run in under 5 minutes

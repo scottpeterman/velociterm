@@ -1,0 +1,12 @@
+authentication:
+  default_method: "local"
+  poc_mode: false
+
+ldap:
+    server: "ldap.company.com"
+    port: 389
+    use_ssl: false
+    base_dn: "dc=company,dc=com"
+    user_dn_template: "uid={username},ou=users,dc=company,dc=com"
+    search_groups: true
+    group_base_dn: "ou=groups,dc=company,dc=com"
