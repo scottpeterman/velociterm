@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Enhanced Authentication Module for VelociTerm NB
-Supports local OS authentication and LDAP with conditional imports
+Supports local OS authentication and LDAP with Paramiko fallback
 """
 
 import logging
@@ -27,7 +27,7 @@ class AuthResult:
 
 
 class LocalAuthenticator:
-    """Local OS authentication with conditional imports"""
+    """Local OS authentication with conditional imports and Paramiko fallback"""
 
     def __init__(self):
         self.system = platform.system().lower()
@@ -37,6 +37,7 @@ class LocalAuthenticator:
         """Initialize OS-specific authentication modules"""
         self.win32_available = False
         self.pam_available = False
+        self.paramiko_available = False
 
         if self.system == "windows":
             try:
@@ -52,13 +53,23 @@ class LocalAuthenticator:
                 logger.warning("Windows authentication modules not available (install pywin32)")
 
         elif self.system in ["linux", "darwin"]:  # darwin = macOS
+            # Try PAM first
             try:
                 import pam
                 self.pam = pam
                 self.pam_available = True
                 logger.info(f"{self.system.title()} PAM authentication module loaded")
             except ImportError:
-                logger.warning("PAM module not available (install python-pam)")
+                logger.info("PAM module not available, will use SSH fallback")
+
+            # Try Paramiko as fallback
+            try:
+                import paramiko
+                self.paramiko = paramiko
+                self.paramiko_available = True
+                logger.info("Paramiko SSH authentication fallback available")
+            except ImportError:
+                logger.warning("Paramiko not available (install paramiko)")
 
     def authenticate(self, username: str, password: str, domain: str = None) -> AuthResult:
         """Authenticate against local OS"""
@@ -67,10 +78,12 @@ class LocalAuthenticator:
             return self._authenticate_windows(username, password, domain)
         elif self.system in ["linux", "darwin"] and self.pam_available:
             return self._authenticate_unix(username, password)
+        elif self.system in ["linux", "darwin"] and self.paramiko_available:
+            return self._authenticate_ssh_localhost(username, password)
         else:
             return AuthResult(
                 success=False,
-                error=f"Local authentication not available on {self.system}"
+                error=f"No authentication methods available on {self.system}"
             )
 
     def _authenticate_windows(self, username: str, password: str, domain: str = None) -> AuthResult:
@@ -80,7 +93,7 @@ class LocalAuthenticator:
             if not domain:
                 domain = self.win32api.GetComputerName()
 
-            logger.debug(f"Attempting Windows auth for {domain}@{username}")  # Changed \ to @
+            logger.debug(f"Attempting Windows auth for {domain}@{username}")
 
             # Attempt logon
             handle = self.win32security.LogonUser(
@@ -94,24 +107,22 @@ class LocalAuthenticator:
             # Get user groups (optional)
             groups = []
             try:
-                # This is more complex - simplified for now
                 groups = ["Users"]  # Default group
             except Exception as group_error:
                 logger.debug(f"Could not get groups: {group_error}")
                 groups = ["Users"]
 
-            # Close handle - FIXED: use win32api, not win32security
+            # Close handle
             self.win32api.CloseHandle(handle)
 
-            logger.info(f"Windows authentication successful for {domain}@{username}")  # Changed \ to @
+            logger.info(f"Windows authentication successful for {domain}@{username}")
             return AuthResult(
                 success=True,
-                username=f"{domain}@{username}",  # Changed \ to @ for filesystem safety
+                username=f"{domain}@{username}",
                 groups=groups
             )
 
         except self.win32security.error as e:
-            # Specific win32 error
             error_code = e.winerror if hasattr(e, 'winerror') else 'unknown'
             logger.warning(f"Windows authentication failed for {username}: {e} (code: {error_code})")
             return AuthResult(
@@ -124,6 +135,7 @@ class LocalAuthenticator:
                 success=False,
                 error=f"Authentication system error: {e}"
             )
+
     def _authenticate_unix(self, username: str, password: str) -> AuthResult:
         """Unix/Linux/macOS authentication using PAM"""
         try:
@@ -131,39 +143,106 @@ class LocalAuthenticator:
             success = p.authenticate(username, password)
 
             if success:
-                # Get user groups (optional)
-                groups = []
-                try:
-                    import grp
-                    import pwd
-                    user_info = pwd.getpwnam(username)
-                    groups = [g.gr_name for g in grp.getgrall() if username in g.gr_mem]
-                    # Add primary group
-                    primary_group = grp.getgrgid(user_info.pw_gid)
-                    if primary_group.gr_name not in groups:
-                        groups.append(primary_group.gr_name)
-                except Exception:
-                    groups = ["users"]  # Default group
+                # Get user groups
+                groups = self._get_user_groups(username)
 
-                logger.info(f"Unix authentication successful for {username}")
+                logger.info(f"Unix PAM authentication successful for {username}")
                 return AuthResult(
                     success=True,
                     username=username,
                     groups=groups
                 )
             else:
-                logger.warning(f"Unix authentication failed for {username}")
+                logger.warning(f"Unix PAM authentication failed for {username}")
                 return AuthResult(
                     success=False,
                     error="Invalid username or password"
                 )
 
         except Exception as e:
-            logger.error(f"Unix authentication error for {username}: {e}")
+            logger.error(f"Unix PAM authentication error for {username}: {e}")
             return AuthResult(
                 success=False,
                 error="Authentication system error"
             )
+
+    def _authenticate_ssh_localhost(self, username: str, password: str) -> AuthResult:
+        """Authenticate by SSH to localhost using Paramiko"""
+        try:
+            # Create SSH client
+            ssh = self.paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(self.paramiko.AutoAddPolicy())
+
+            # Attempt connection
+            ssh.connect(
+                hostname='localhost',
+                username=username,
+                password=password,
+                timeout=10,
+                allow_agent=False,
+                look_for_keys=False
+            )
+
+            # Execute whoami to verify
+            stdin, stdout, stderr = ssh.exec_command('whoami')
+            whoami_result = stdout.read().decode().strip()
+
+            ssh.close()
+
+            if whoami_result == username:
+                # Get user groups
+                groups = self._get_user_groups(username)
+
+                logger.info(f"SSH localhost authentication successful for {username}")
+                return AuthResult(
+                    success=True,
+                    username=username,
+                    groups=groups
+                )
+            else:
+                logger.warning(f"SSH whoami mismatch: expected {username}, got {whoami_result}")
+                return AuthResult(
+                    success=False,
+                    error="Authentication verification failed"
+                )
+
+        except self.paramiko.AuthenticationException:
+            logger.warning(f"SSH authentication failed for {username}")
+            return AuthResult(
+                success=False,
+                error="Invalid username or password"
+            )
+        except self.paramiko.SSHException as e:
+            logger.error(f"SSH connection error for {username}: {e}")
+            return AuthResult(
+                success=False,
+                error="SSH connection failed"
+            )
+        except Exception as e:
+            logger.error(f"SSH authentication error for {username}: {e}")
+            return AuthResult(
+                success=False,
+                error="Authentication system error"
+            )
+
+    def _get_user_groups(self, username: str) -> list:
+        """Get user groups from system"""
+        try:
+            import pwd
+            import grp
+
+            user_info = pwd.getpwnam(username)
+            groups = [g.gr_name for g in grp.getgrall() if username in g.gr_mem]
+
+            # Add primary group
+            primary_group = grp.getgrgid(user_info.pw_gid)
+            if primary_group.gr_name not in groups:
+                groups.append(primary_group.gr_name)
+
+            return groups
+        except Exception as e:
+            logger.debug(f"Could not get groups for {username}: {e}")
+            return ["users"]  # Default group
 
 
 class LDAPAuthenticator:
@@ -301,7 +380,10 @@ class AuthenticationManager:
         methods = []
 
         # Check local auth availability
-        if self.local_auth.win32_available or self.local_auth.pam_available:
+        local_auth = self.local_auth
+        if (local_auth.win32_available or
+                local_auth.pam_available or
+                local_auth.paramiko_available):
             methods.append(AuthMethod.LOCAL)
 
         # Check LDAP availability
@@ -312,30 +394,20 @@ class AuthenticationManager:
 
     def get_auth_info(self) -> Dict[str, Any]:
         """Get authentication system information"""
+        local_auth = self.local_auth
+
         return {
             "system": platform.system(),
             "available_methods": [method.value for method in self.get_available_methods()],
             "local_auth": {
-                "windows_available": getattr(self.local_auth, 'win32_available', False),
-                "pam_available": getattr(self.local_auth, 'pam_available', False)
+                "windows_available": getattr(local_auth, 'win32_available', False),
+                "pam_available": getattr(local_auth, 'pam_available', False),
+                "ssh_fallback_available": getattr(local_auth, 'paramiko_available', False)
             },
             "ldap_configured": self.ldap_auth is not None,
             "ldap_available": getattr(self.ldap_auth, 'ldap_available', False) if self.ldap_auth else False
         }
 
-
-# Example configuration
-EXAMPLE_CONFIG = {
-    "ldap": {
-        "server": "ldap.company.com",
-        "port": 389,
-        "use_ssl": False,
-        "base_dn": "dc=company,dc=com",
-        "user_dn_template": "uid={username},ou=users,dc=company,dc=com",
-        "search_groups": True,
-        "group_base_dn": "ou=groups,dc=company,dc=com"
-    }
-}
 
 # Usage example:
 if __name__ == "__main__":
