@@ -1,4 +1,4 @@
-// CredentialsModal.jsx - Extracted credentials modal
+// CredentialsModal.jsx - Extracted credentials modal with SSH key auth support
 import React from 'react';
 
 const CredentialsModal = ({
@@ -19,7 +19,7 @@ const CredentialsModal = ({
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && credentials.username) {
       onConnect();
     }
   };
@@ -124,7 +124,7 @@ const CredentialsModal = ({
               type="password"
               value={credentials.password}
               onChange={(e) => handleInputChange('password', e.target.value)}
-              placeholder="Enter password"
+              placeholder="Enter password (or leave blank for key auth)"
               onKeyPress={handleKeyPress}
               style={{
                 width: '100%',
@@ -136,6 +136,14 @@ const CredentialsModal = ({
                 fontSize: '0.875rem'
               }}
             />
+            <p style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-tab-inactive)',
+              marginTop: '0.25rem',
+              fontStyle: 'italic'
+            }}>
+              Leave blank to attempt SSH key authentication
+            </p>
           </div>
         </div>
 
@@ -167,24 +175,24 @@ const CredentialsModal = ({
           </button>
           <button
             onClick={onConnect}
-            disabled={!credentials.username || !credentials.password}
+            disabled={!credentials.username}
             style={{
               padding: '0.5rem 1rem',
               backgroundColor: 'var(--bg-button)',
               color: 'var(--text-button)',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: !credentials.username || !credentials.password ? 'not-allowed' : 'pointer',
-              opacity: !credentials.username || !credentials.password ? 0.5 : 1,
+              cursor: !credentials.username ? 'not-allowed' : 'pointer',
+              opacity: !credentials.username ? 0.5 : 1,
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              if (credentials.username && credentials.password) {
+              if (credentials.username) {
                 e.target.style.backgroundColor = 'var(--bg-button-hover)';
               }
             }}
             onMouseLeave={(e) => {
-              if (credentials.username && credentials.password) {
+              if (credentials.username) {
                 e.target.style.backgroundColor = 'var(--bg-button)';
               }
             }}

@@ -266,6 +266,302 @@ Frontend will open automatically at `http://localhost:3000`
 - Advanced session management with timeout policies
 - Security certification and penetration testing
 
+## SSH Key Authentication
+
+### Overview
+
+VelociTerm Embedded Terminal supports SSH key-based authentication, allowing password-less access to network devices. This feature enables seamless integration into automated workflows and eliminates the need to repeatedly enter passwords.
+
+### How SSH Key Auth Works
+
+**Authentication Flow:**
+1. User authenticates to VelociTerm (JWT/Session authentication)
+2. VelociTerm stores `velociterm_user` in localStorage and session
+3. When connecting with **blank password**:
+   - Backend receives `velociterm_user` from WebSocket connection
+   - Backend looks for SSH key in `/workspace/{velociterm_user}/keys/id_rsa`
+   - If key exists: Attempts SSH key authentication
+   - If key auth fails or no key: Falls back to password (if provided)
+
+**Example Connection with SSH Key:**
+```javascript
+// WebSocket payload when password is blank
+{
+  "type": "connect",
+  "hostname": "10.0.0.108",
+  "port": 22,
+  "username": "speterman",              // SSH username on device
+  "password": "",                        // Empty = attempt key auth
+  "velociterm_user": "DESKTOP-MACHINE$speterman"  // Key lookup user
+}
+
+// Backend process:
+// 1. Checks /workspace/DESKTOP-MACHINE$speterman/keys/id_rsa
+// 2. Found? → Attempts: ssh -i /workspace/.../id_rsa speterman@10.0.0.108
+// 3. Success! → Establishes SSH session
+// 4. Failure? → No fallback (password was blank)
+```
+
+### Setting Up SSH Keys
+
+**1. Locate Your Workspace:**
+```bash
+# After logging into VelociTerm, your workspace is created:
+# /workspace/{velociterm_user}/keys/
+
+# Example for Windows user:
+/workspace/DESKTOP-MACHINE$speterman/keys/
+
+# Example for Linux user:
+/workspace/hostname$username/keys/
+```
+
+**2. Add Your SSH Private Key:**
+```bash
+# Copy your existing key
+cp ~/.ssh/id_rsa /workspace/DESKTOP-MACHINE\$speterman/keys/
+
+# Or generate a new key
+ssh-keygen -t rsa -b 4096 -f /workspace/DESKTOP-MACHINE\$speterman/keys/id_rsa
+
+# Set proper permissions (Linux/Mac)
+chmod 600 /workspace/DESKTOP-MACHINE\$speterman/keys/id_rsa
+chmod 644 /workspace/DESKTOP-MACHINE\$speterman/keys/id_rsa.pub
+```
+
+**3. Deploy Public Key to Target Devices:**
+```bash
+# Method 1: Using ssh-copy-id
+ssh-copy-id -i /workspace/DESKTOP-MACHINE\$speterman/keys/id_rsa.pub user@device
+
+# Method 2: Manual deployment
+cat /workspace/DESKTOP-MACHINE\$speterman/keys/id_rsa.pub | \
+  ssh user@device "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+
+# Method 3: Copy and paste
+# Copy public key content, then on device:
+vi ~/.ssh/authorized_keys
+# Paste the public key content
+# Save and set permissions: chmod 600 ~/.ssh/authorized_keys
+```
+
+### Using SSH Key Auth in Embedded Terminal
+
+**In the UI:**
+1. Navigate to device URL: `/embed?host=10.0.0.108&port=22&name=Device`
+2. Log into VelociTerm (JWT authentication)
+3. SSH credential form appears
+4. Enter SSH username (e.g., `speterman`)
+5. **Leave password field BLANK**
+6. Click "Connect"
+7. VelociTerm automatically uses your SSH key!
+
+**Visual Indicators:**
+- Password placeholder: `"Enter password (or leave blank for key auth)"`
+- Hint text: `💡 Leave password blank to use your SSH key`
+- No asterisk on password field (optional)
+
+**Example HTML:**
+```html
+<!-- Embed with SSH key auth -->
+<iframe
+  src="https://velocit erm.local/embed?host=10.0.0.108&port=22&name=CoreSwitch"
+  width="100%"
+  height="600"
+  frameborder="0"
+></iframe>
+
+<!-- User workflow:
+1. Logs into VelociTerm
+2. Enters SSH username
+3. Leaves password blank
+4. Connects with SSH key automatically
+-->
+```
+
+### Key Storage and Security
+
+**Workspace Isolation:**
+- Each user has isolated workspace: `/workspace/{velociterm_user}/`
+- Keys stored in `keys/` subdirectory
+- Encrypted workspace using PBKDF2 key derivation
+- Keys never accessible by other users
+
+**Key File Format:**
+```
+/workspace/
+  └── DESKTOP-MACHINE$speterman/
+      ├── keys/
+      │   ├── id_rsa          # Private key (chmod 600)
+      │   └── id_rsa.pub      # Public key (chmod 644)
+      ├── sessions/           # User's session files
+      └── settings.yaml       # User preferences
+```
+
+**Supported Key Types:**
+- RSA (2048, 4096 bits)
+- ECDSA (256, 384, 521 bits)
+- ED25519 (recommended for new keys)
+
+**Security Best Practices:**
+- Use strong passphrases on private keys (VelociTerm doesn't prompt for them)
+- Rotate keys periodically
+- Use separate keys for VelociTerm vs personal use
+- Monitor key usage via SSH device logs
+- Deploy keys only to authorized devices
+
+### Troubleshooting SSH Key Auth
+
+**Connection Fails with Blank Password:**
+```
+Problem: "Authentication failed" with blank password
+Causes:
+1. SSH key not present in workspace
+2. SSH key has incorrect permissions
+3. Public key not deployed to target device
+4. Wrong SSH username
+
+Solutions:
+1. Verify key exists: ls -la /workspace/{user}/keys/id_rsa
+2. Check permissions: chmod 600 /workspace/{user}/keys/id_rsa
+3. Verify public key on device: cat ~/.ssh/authorized_keys
+4. Try password auth to confirm username is correct
+```
+
+**Key Auth Works, But Password Fallback Doesn't:**
+```
+Problem: Key auth fails, password fallback doesn't work
+Cause: Password field was left blank
+
+Solution:
+- For password fallback to work, provide BOTH:
+  - Username: speterman
+  - Password: your_password
+- VelociTerm tries key first, then password
+- Blank password = key-only auth (no fallback)
+```
+
+**Finding Your velociterm_user:**
+```javascript
+// Open browser console on VelociTerm page
+console.log(localStorage.getItem('velociterm_user'));
+// Output: "DESKTOP-MACHINE$speterman"
+
+// This is your workspace directory name
+// Your keys should be in: /workspace/DESKTOP-MACHINE$speterman/keys/
+```
+
+### Integration Examples
+
+**NetBox Integration with SSH Keys:**
+```html
+<!-- NetBox device view with VelociTerm embedded -->
+<h2>{{ device.name }} - {{ device.primary_ip }}</h2>
+
+<!-- Embedded terminal with SSH key support -->
+<iframe
+  src="https://velociterm.local/embed?host={{ device.primary_ip }}&name={{ device.name }}"
+  width="100%"
+  height="800"
+  style="border: 1px solid #333;"
+></iframe>
+
+<!-- Workflow:
+1. User already logged into VelociTerm
+2. Opens NetBox device page
+3. Embedded terminal loads
+4. User enters their SSH username
+5. Leaves password blank
+6. SSH key auth happens automatically
+7. Instant access to device console
+-->
+```
+
+**Automated Dashboard with Multiple Devices:**
+```html
+<div class="device-dashboard">
+  <!-- Multiple embedded terminals, all using SSH keys -->
+  
+  <div class="terminal-grid">
+    <iframe src="/embed?host=core-sw-01&port=22&name=Core-SW-01"></iframe>
+    <iframe src="/embed?host=dist-sw-01&port=22&name=Dist-SW-01"></iframe>
+    <iframe src="/embed?host=edge-rtr-01&port=22&name=Edge-RTR-01"></iframe>
+    <iframe src="/embed?host=fw-01&port=22&name=Firewall-01"></iframe>
+  </div>
+  
+  <!-- All terminals:
+  - Use same VelociTerm authentication
+  - Same SSH keys from user's workspace
+  - No password prompts needed
+  - Instant access to all devices
+  -->
+</div>
+```
+
+### API Integration
+
+**Programmatic Embedded Terminal Creation:**
+```javascript
+// Create embedded terminal with SSH key auth
+function createEmbeddedTerminal(device) {
+  const iframe = document.createElement('iframe');
+  
+  // URL includes device info
+  iframe.src = `/embed?host=${device.ip}&port=${device.port}&name=${device.name}`;
+  iframe.width = '100%';
+  iframe.height = '600';
+  iframe.style.border = '1px solid #444';
+  
+  // Append to container
+  document.getElementById('terminal-container').appendChild(iframe);
+  
+  // User will:
+  // 1. Enter their SSH username
+  // 2. Leave password blank
+  // 3. Connect with SSH key automatically
+}
+
+// Example usage
+const devices = [
+  { ip: '10.0.0.108', port: 22, name: 'CoreSwitch01' },
+  { ip: '10.0.0.109', port: 22, name: 'CoreSwitch02' },
+  { ip: '10.0.0.110', port: 22, name: 'DistSwitch01' }
+];
+
+devices.forEach(device => createEmbeddedTerminal(device));
+```
+
+### Limitations & Future Plans
+
+**Current Implementation (Alpha):**
+- ✅ Manual key management (copy to workspace directory)
+- ✅ Automatic key lookup by `velociterm_user`
+- ✅ Password fallback support
+- ✅ Works across all VelociTerm interfaces
+- ⚠️ No UI for key upload
+- ⚠️ No UI for key generation
+- ⚠️ Single key per user workspace
+- ⚠️ Manual public key deployment to devices
+
+**Planned Enhancements:**
+- Web UI for key upload and download
+- In-app key generation with download
+- Multiple keys with device-specific associations
+- Key rotation and expiration policies
+- Automated public key deployment
+- Key usage audit logging
+- SSH agent forwarding support
+
+### Feature Request Context
+
+- **User Demand:** ~10% of users requested SSH key authentication
+- **Implementation Status:** Fully functional in alpha release
+- **Approach:** Manual key management (industry-standard practice)
+- **Use Cases:** Automated workflows, dashboard integrations, password-less access
+- **Integration:** Works seamlessly with NetBox embedded terminals
+
+---
+
 ## Deployment Options
 
 ### Development/Testing Environment

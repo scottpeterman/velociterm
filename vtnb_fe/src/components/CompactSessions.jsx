@@ -149,7 +149,7 @@ const CompactSessions = ({ onOpenTerminalWithCredentials, windowManager, theme }
   return (
     <>
       {/* Sessions Header with Edit Button */}
-      <div classname='theme-${theme}'
+      <div className='theme-${theme}'
 
         style={{
         padding: '1rem 1.25rem 0.75rem',

@@ -41,23 +41,39 @@ export const constrainWindowSize = (size, minSize = { width: 300, height: 200 })
 };
 
 // WebSocket URL builder for different environments
+//export const buildWebSocketUrl = (windowId, endpoint = 'terminal') => {
+//  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+//  const hostname = window.location.hostname;
+//  let port;
+//
+//  // Development environment detection
+//  // local dev mode:   if (window.location.port === '3000' ||
+//
+//  if (window.location.port === '3000' ||
+//      window.location.port === '5173' ||
+//      window.location.port === '5174') {
+//    port = '8050'; // Backend port
+//  } else {
+//    port = window.location.port || (protocol === 'wss:' ? '443' : '80');
+//  }
+//
+//  return `${protocol}//${hostname}:${port}/ws/${endpoint}/${windowId}`;
+//};
 export const buildWebSocketUrl = (windowId, endpoint = 'terminal') => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const hostname = window.location.hostname;
-  let port;
 
-  // Development environment detection
-  if (window.location.port === '3000' ||
-      window.location.port === '5173' ||
-      window.location.port === '5174') {
-    port = '8050'; // Backend port
-  } else {
-    port = window.location.port || (protocol === 'wss:' ? '443' : '80');
-  }
+  // Check for backend port override in query string
+  const params = new URLSearchParams(window.location.search);
+  const backendPort = params.get('bep');
+
+  // Use query param if present, otherwise use current port (or default for protocol)
+  const port = backendPort ||
+               window.location.port ||
+               (protocol === 'wss:' ? '443' : '80');
 
   return `${protocol}//${hostname}:${port}/ws/${endpoint}/${windowId}`;
 };
-
 // Safe JSON stringification
 export const safeJSONStringify = (obj) => {
   try {

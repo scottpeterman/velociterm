@@ -638,12 +638,25 @@ const handleContextMenuContainerRelative = useCallback((e) => {
         console.log('[Terminal] WebSocket connected');
         setConnectionStatus('connecting');
 
+        // Get VelociTerm username for SSH key lookup
+        const velociTermUser = localStorage.getItem('velociterm_user');
+
+        if (velociTermUser) {
+          console.log(`✓ VelociTerm user: ${velociTermUser}`);
+          console.log(`✓ SSH device user: ${debouncedCredentials.username}`);
+          console.log(`✓ SSH key authentication available`);
+        } else {
+          console.warn('⚠ No VelociTerm user found in localStorage');
+          console.warn('⚠ SSH key authentication unavailable - will use password only');
+        }
+
         const payload = {
           type: 'connect',
           hostname: sessionData.host,
           port: Number(sessionData.port),
           username: debouncedCredentials.username,
-          password: debouncedCredentials.password,
+          password: debouncedCredentials.password || '',
+          velociterm_user: velociTermUser || null,  // Required for SSH key lookup
           windowId
         };
 
@@ -682,7 +695,7 @@ const handleContextMenuContainerRelative = useCallback((e) => {
               console.log('[Terminal] Attempting reconnection...');
               openSocket();
             }
-          }, 3000);
+          }, 8050);
         }
       };
 
@@ -998,7 +1011,8 @@ const handleContextMenuContainerRelative = useCallback((e) => {
       }
     }
 
-    if (credentials && credentials.username && credentials.password) {
+    // Only require username - password can be blank for SSH key auth
+    if (credentials && credentials.username) {
       terminal.writeln(`Connecting to ${sessionData.host}:${sessionData.port}...`);
       setTimeout(() => {
         openSocket();
