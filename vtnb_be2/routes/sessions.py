@@ -40,7 +40,9 @@ def create_sessions_routes(workspace_manager: WorkspaceManager, get_current_user
                     "sessions": []
                 }
                 for session in folder.sessions:
-                    folder_dict["sessions"].append(session.dict())
+                    # Exclude folder_name from session dict - it's redundant (already in folder)
+                    session_dict = session.dict(exclude={'folder_name'})
+                    folder_dict["sessions"].append(session_dict)
                 result.append(folder_dict)
 
             logger.info(f"Loaded {len(result)} session folders for user {username}")
@@ -66,7 +68,7 @@ def create_sessions_routes(workspace_manager: WorkspaceManager, get_current_user
             # Set default folder if not provided
             folder_name = session_data.get('folder_name', 'Default')
 
-            # Create SessionData object
+            # Create SessionData object with folder_name
             new_session = SessionData(
                 id=f"session-{int(time.time())}-{secrets.token_urlsafe(4)}",
                 display_name=session_data['display_name'],
@@ -74,19 +76,13 @@ def create_sessions_routes(workspace_manager: WorkspaceManager, get_current_user
                 port=session_data.get('port', 22),
                 device_type=session_data.get('device_type', 'Server'),
                 platform=session_data.get('platform', ''),
+                folder_name=folder_name,
                 status='disconnected',
                 created_at=datetime.utcnow().isoformat()
             )
 
-            # Add folder_name for workspace manager
-            new_session_dict = new_session.dict()
-            new_session_dict['folder_name'] = folder_name
-
-            # Create SessionData with folder_name
-            session_with_folder = SessionData(**new_session_dict)
-
             # Save to workspace
-            success = workspace_manager.create_session_for_user(username, session_with_folder)
+            success = workspace_manager.create_session_for_user(username, new_session)
 
             if success:
                 return {"status": "success", "session_id": new_session.id, "message": "Session created"}

@@ -38,6 +38,72 @@ logger = logging.getLogger(__name__)
 class VelociTermBackend:
     """JWT-enhanced VelociTerm backend with dual authentication support"""
 
+    # Updated main.py - Config-driven CORS setup
+
+    def load_auth_config(self, config_path: str) -> dict:
+        """Load configuration from file"""
+        import yaml
+        config_file = Path(config_path)
+        if config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    config = yaml.safe_load(f)
+                return config
+            except Exception as e:
+                logger.warning(f"Failed to load config: {e}")
+
+        # Default configuration
+        return {
+            "authentication": {
+                "default_method": "local",
+                "poc_mode": False
+            },
+            "cors": {
+                "mode": "dynamic",
+                "allow_credentials": True,
+                "dynamic": {
+                    "allow_localhost": True,
+                    "allow_same_host": True,
+                    "additional_hosts": []
+                }
+            },
+            "ldap": {
+                "server": "ldap.company.com",
+                "port": 389,
+                "use_ssl": False,
+                "base_dn": "dc=company,dc=com",
+                "user_dn_template": "uid={username},ou=users,dc=company,dc=com"
+            }
+        }
+
+    def setup_middleware(self):
+        """Setup CORS - dead simple version"""
+
+        # Load CORS config
+        cors_config = self.auth_config.get('cors', {})
+        allowed_origins = cors_config.get('allowed_origins', [])
+
+        # If no origins specified, allow common development origins
+        if not allowed_origins:
+            allowed_origins = [
+                "http://localhost:3000",
+                "http://localhost:8050",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8050",
+                "http://10.0.0.108:3000",  # React frontend
+                "http://10.0.0.108:8080"
+            ]
+
+        logger.info(f"CORS allowed origins: {allowed_origins}")
+
+        # Use FastAPI's built-in CORS middleware
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=allowed_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
     def __init__(self, config_path: str = "config.yaml"):
         self.app = FastAPI(
             title="VelociTerm Backend API",
@@ -49,56 +115,25 @@ class VelociTermBackend:
         self.workspace_manager = WorkspaceManager()
         self.connection_handlers = ConnectionHandlers(self.workspace_manager)
 
-        # Load authentication configuration
+        # Load configuration (now includes CORS, auth, etc.)
         self.auth_config = self.load_auth_config(config_path)
-        self.auth_manager = AuthenticationManager(self.auth_config)
+
+        # Initialize auth manager with auth section of config
+        auth_section = self.auth_config.get('authentication', {})
+        auth_section['ldap'] = self.auth_config.get('ldap', {})
+        self.auth_manager = AuthenticationManager(auth_section)
 
         # Initialize auth dependencies with JWT support
         self.auth_deps = AuthDependencies(self.connection_handlers)
 
         # Setup application
-        self.setup_middleware()
+        self.setup_middleware()  # Now reads from config!
         self.setup_route_modules()
         self.setup_websocket_routes()
         self.setup_window_management()
         self.setup_static_files()
 
-    def load_auth_config(self, config_path: str) -> dict:
-        """Load authentication configuration from file"""
-        import yaml
-        config_file = Path(config_path)
-        if config_file.exists():
-            try:
-                with open(config_file, 'r') as f:
-                    config = yaml.safe_load(f)
-                return config.get('authentication', {})
-            except Exception as e:
-                logger.warning(f"Failed to load auth config: {e}")
 
-        # Default configuration
-        return {
-            "default_method": "local",
-            "ldap": {
-                "server": "ldap.company.com",
-                "port": 389,
-                "use_ssl": False,
-                "base_dn": "dc=company,dc=com",
-                "user_dn_template": "uid={username},ou=users,dc=company,dc=com"
-            }
-        }
-
-    def setup_middleware(self):
-        """Setup CORS and logging middleware"""
-        self.app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],  # Configure appropriately for production
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-
-        # Add request logging middleware
-        self.app.add_middleware(RequestLoggingMiddleware)
 
     def setup_route_modules(self):
         """Setup modular route handlers with dual authentication support"""
@@ -194,13 +229,42 @@ class VelociTermBackend:
                         data = await websocket.receive_json()
 
                         if data.get('type') == 'connect':
+                            ssh_username = data.get('username')  # SSH device username
+                            velociterm_user = data.get('velociterm_user')  # VelociTerm workspace user
+
+                            logger.info(f"=== SSH Connection Request ===")
+                            logger.info(f"VelociTerm user: {velociterm_user}")
+                            logger.info(f"SSH device user: {ssh_username}")
+
+                            # NEW: Get SSH key file path instead of loading bytes
+                            ssh_key_path = None
+                            if velociterm_user:
+                                from pathlib import Path
+                                key_dir = Path("./workspaces") / velociterm_user / "ssh_key"
+
+                                logger.info(f"Looking for SSH key in: {key_dir}")
+
+                                # Try common key files in order
+                                for key_filename in ["id_rsa", "id_ed25519", "id_ecdsa"]:
+                                    key_path = key_dir / key_filename
+                                    if key_path.exists():
+                                        ssh_key_path = str(key_path)
+                                        logger.info(f"✓ Found SSH key: {ssh_key_path}")
+                                        break
+
+                                if not ssh_key_path:
+                                    logger.info(f"No SSH key found in {key_dir}")
+                            else:
+                                logger.warning("No VelociTerm user provided - cannot locate SSH key")
+
                             await self.connection_handlers.ssh_manager.connect(
                                 window_id,
                                 data.get('hostname'),
                                 data.get('port', 22),
-                                data.get('username'),
+                                ssh_username,  # SSH device username
                                 data.get('password'),
-                                websocket
+                                websocket,
+                                ssh_key_path=ssh_key_path  # Pass PATH instead of bytes
                             )
 
                         elif data.get('type') == 'input':
@@ -245,7 +309,6 @@ class VelociTermBackend:
                     await self.connection_handlers.ssh_manager.disconnect(window_id)
                 except:
                     pass
-
     def setup_static_files(self):
         """Setup static file serving for React build"""
         static_dir = Path("static")

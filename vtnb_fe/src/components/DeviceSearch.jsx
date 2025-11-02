@@ -90,7 +90,7 @@ const DeviceSearch = ({ onCreateTerminalSession }) => {
   };
 
   const handleCredentialsConnect = () => {
-    if (!credentials.username || !credentials.password || !pendingDevice) return;
+    if (!credentials.username || !pendingDevice) return;
 
     const sessionData = {
       id: pendingDevice.id,

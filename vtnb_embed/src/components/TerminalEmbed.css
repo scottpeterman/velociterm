@@ -1,0 +1,237 @@
+/* VelociTerm Embedded Terminal - Terminal Component Styles */
+
+.terminal-embed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0a0e14;
+  overflow: hidden;
+}
+
+/* Terminal Header */
+.terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(0, 217, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+  min-height: 40px;
+}
+
+.terminal-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #00d9ff;
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+}
+
+/* Status Indicators */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.status-connecting {
+  color: #ffcc00;
+  background: rgba(255, 204, 0, 0.1);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-connected {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.status-disconnected {
+  color: #888;
+  background: rgba(136, 136, 136, 0.1);
+}
+
+.status-error {
+  color: #ff3333;
+  background: rgba(255, 51, 51, 0.1);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Terminal Container */
+.terminal-container {
+  flex: 1;
+  overflow: hidden;
+  background: #0a0e14;
+  padding: 8px;
+}
+
+.terminal-container .xterm {
+  height: 100% !important;
+  padding: 0;
+}
+
+.terminal-container .xterm-viewport {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 217, 255, 0.3) rgba(0, 217, 255, 0.05);
+}
+
+/* Custom Scrollbar for WebKit */
+.terminal-container .xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-container .xterm-viewport::-webkit-scrollbar-track {
+  background: rgba(0, 217, 255, 0.05);
+}
+
+.terminal-container .xterm-viewport::-webkit-scrollbar-thumb {
+  background: rgba(0, 217, 255, 0.3);
+  border-radius: 4px;
+}
+
+.terminal-container .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 217, 255, 0.5);
+}
+
+/* xterm.js Overrides for Embedded Mode */
+.terminal-container .xterm-screen {
+  background-color: transparent !important;
+}
+
+.terminal-container .xterm-cursor-layer {
+  z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .terminal-header {
+    padding: 6px 12px;
+    min-height: 36px;
+  }
+
+  .terminal-title {
+    font-size: 12px;
+  }
+
+  .status-indicator {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+
+  .terminal-container {
+    padding: 4px;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .terminal-header {
+    border-bottom-width: 2px;
+  }
+
+  .status-indicator {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .status-connecting {
+    animation: none;
+  }
+
+  .loading-spinner {
+    animation: none;
+  }
+}
+
+/* Credential prompt styles */
+.cred-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 24px;
+}
+
+.cred-prompt form {
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 320px;
+}
+
+.cred-prompt h3 {
+  margin: 0 0 8px 0;
+  color: #00d9ff;
+  font-size: 18px;
+}
+
+.cred-prompt p {
+  margin: 0 0 20px 0;
+  color: rgba(0, 217, 255, 0.7);
+  font-size: 13px;
+}
+
+.cred-prompt input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.cred-prompt input:focus {
+  outline: none;
+  border-color: #00d9ff;
+  background: rgba(0, 217, 255, 0.1);
+}
+
+.cred-prompt button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+  border: none;
+  border-radius: 4px;
+  color: #0a0e14;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.cred-prompt button:hover {
+  background: linear-gradient(135deg, #00eeff 0%, #00aadd 100%);
+}
+
+.cred-prompt form .ssh-key-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #00d9ff;
+  text-align: center;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Make the password field stand out when it's optional */
+.cred-prompt input[type="password"]::placeholder {
+  font-size: 12px;
+  opacity: 0.7;
+}

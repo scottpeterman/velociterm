@@ -90,7 +90,7 @@ const DraggableWindow = React.memo(({
   const [resizeDirection, setResizeDirection] = useState(null);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const windowRef = useRef(null);
-  
+
   // ADD: Ref to track position during dragging without triggering renders
   const dragPositionRef = useRef({ x: 0, y: 0 });
 
@@ -304,12 +304,12 @@ const DraggableWindow = React.memo(({
     if (isDragging) {
       // Commit the final position to React state
       const finalPosition = dragPositionRef.current;
-      
+
       // Reset CSS transform and update React state
       if (windowRef.current) {
         windowRef.current.style.transform = '';
       }
-      
+
       setPosition(finalPosition);
       if (onPositionChange) {
         onPositionChange(finalPosition);
@@ -566,7 +566,8 @@ const DashboardContent = ({ user, onLogout, theme, onThemeChange }) => {
 
   // Handle credential modal connect
   const handleCredentialsConnect = () => {
-    if (!credentials.username || !credentials.password || !pendingSession) {
+    // Only require username - password can be blank for SSH key auth
+    if (!credentials.username || !pendingSession) {
       return;
     }
 
@@ -586,7 +587,7 @@ const DashboardContent = ({ user, onLogout, theme, onThemeChange }) => {
       },
       credentials: {
         username: credentials.username,
-        password: credentials.password
+        password: credentials.password || ''  // Default to empty string for key auth
       },
       initialPosition: {
         x: 100 + Math.random() * 200,
@@ -787,12 +788,12 @@ const DashboardContent = ({ user, onLogout, theme, onThemeChange }) => {
           }))}
           placeholder="Enter username"
           autoFocus
-          onKeyPress={(e) => e.key === 'Enter' && credentials.password && handleCredentialsConnect()}
+          onKeyPress={(e) => e.key === 'Enter' && credentials.username && handleCredentialsConnect()}
         />
       </div>
 
       <div className="form-group">
-        <label>Password *</label>
+        <label>Password</label>
         <input
           type="password"
           className="form-input"
@@ -801,9 +802,12 @@ const DashboardContent = ({ user, onLogout, theme, onThemeChange }) => {
             ...prev,
             password: e.target.value
           }))}
-          placeholder="Enter password"
+          placeholder="Enter password (or leave blank for key auth)"
           onKeyPress={(e) => e.key === 'Enter' && credentials.username && handleCredentialsConnect()}
         />
+        <p className="form-hint">
+          💡 Leave blank to attempt SSH key authentication
+        </p>
       </div>
 
       {/* Modal Footer */}
@@ -817,7 +821,7 @@ const DashboardContent = ({ user, onLogout, theme, onThemeChange }) => {
         <button
           className="btn-primary"
           onClick={handleCredentialsConnect}
-          disabled={!credentials.username || !credentials.password}
+          disabled={!credentials.username}
         >
           <Terminal size={16} />
           Connect
